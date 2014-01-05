@@ -1,10 +1,8 @@
-{-
-- とりあえずここがエントリポイントになるっぽい
--}
+module Main where
 
-import System.Environment
+import Ilya
 
 main = do
-    args <- getArgs
-    putStrLn args
+  ilya
+
 
