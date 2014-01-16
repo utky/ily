@@ -1,6 +1,6 @@
 # hs-inqbox
 
-This project is a sandbox to try writing codes in Haskell.
+This project is a sandbox to build the command-line tool written in Haskell.
 
 ## Goal
 
@@ -15,6 +15,9 @@ Building a command line tool which supports to write structured japanese text.
 The command above creates configuration resources in current directory
 and makes the directory project home.
 
+* creating `.ilya` directory in current position.
+* appending appropriate `.gitignore` entries.
+
 ### Compiling sources
 
 `ilya compile`
@@ -22,11 +25,15 @@ and makes the directory project home.
 The command above reads source files and parses syntax
 and furthermore generate compiled output.
 
+* reading source files from `src/main/**/*.tex`.
+* parsing each sources and convert them to syntax tree.
+* outputting formatted document to `target/`
+
 ### Building PFD using TeX (must have been already installed)
 
 `ilya build`
 
-
+* executing building lifecycle.
 
 ### Cleaning up output resrouces
 
@@ -44,8 +51,18 @@ your-project-home/
     target/
 
     .ilya/
-
         config
+        indexes/
+        logs/
+
+~/
+    .ilya/
+
+        issues/
+            list
+            history
+
+        indexes/
 
 ```
 
@@ -77,7 +94,7 @@ Unordered Lists
 
 `Actor's Name: contents of his speech.`
 
-Colon means a separator of actor's name and contents.
+Colon means a separator of actor's name and their speaking contents.
 
 A Speaking part is a block element.
 
@@ -93,6 +110,6 @@ This is same as TeX.
 
 `> Something quoted`
 
-### Reference
+### Annotation
 
 `@`
