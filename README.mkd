@@ -1,0 +1,86 @@
+# ily
+
+This project is a sandbox to build the command-line tool written in Haskell.
+
+## Goal
+
+Building a command line tool which supports writing fiction.
+
+## About
+
+Ily helps you to writing a fiction which syntax is extended markdown.
+
+## Architecture
+
+重要なポイント
+
+* ソースファイルはGHCによって構文木へと変換される
+* ソースには関数が埋め込める → つまり構文木の合成が可能
+* コンパイラによって構文木をepubへ出力したりanalyticsへデータを出力する実行ファイルができる
+* GHCをホスト言語とする内部DSLである
+
+### Compile time feature
+
+### Run time feature
+
+こんだけのプロセスが必要。
+haskell -> markdown -> (pandoc-type) -> xhtml -> epub
+
+## Features to be implemented
+
+sbtみたいな対話型ビルドライフサイクルexecutorがフレームワークであればいいんだけど。
+
+haskelineの下に自分で色々ぶら下げるしかなさそ。
+
+下記は実装されるべきライフサイクル・タスクの一覧
+
+### Commodity
+
+* io - stream based IO
+* cli - basic cli framework
+* config - configuration
+* parser - 独自markdown拡張のparser→pandocの構文木を生成する
+* shell - w/ haskeline
+* db - w/ SQLite to manage backlogs and recording
+
+### Development Commands
+
+* init - ディレクトリの初期化
+* compile - eDSLのコンパイルによるXHTMLへの出力
+* package - epubへ出力
+* outline - アウトライン管理
+* test - modelのテストrun
+* clean - 成果物の消去
+
+### Management Commands
+
+* backlog - task管理
+* pomodoro - pomodoroタイマーとタスク実施の時間記録
+
+## Project Directory Structure
+
+```
+your-project-home/
+
+    build.ilya
+
+    src/
+
+    target/
+
+    .ilya/
+        config
+        indexes/
+        logs/
+
+~/
+    .ilya/
+
+        issues/
+            list
+            history
+
+        indexes/
+
+```
+
