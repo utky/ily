@@ -1,14 +1,18 @@
 module Ily (
-           ily,
-           getIlyDirectory
+           ily
            ) where
 
-import System.Directory
-import System.Environment (getArgs)
 
-import Ily.Configuration
+import              Ily.Configuration       (Configuration)
+import              Ily.Commands            (Command)
 
 
-ily :: [String] -> IO ()
+
+ily :: Configuration -> Command -> IO ()
 ily = undefined
+
+
+
+
+
 

@@ -3,13 +3,15 @@ module Ily.Commands.Init
       createIlyDir
     ) where
 
-import System.FilePath ((</>))
-import System.Directory
 
-createIlyDir :: FilePath -> IO ()
-createIlyDir target = do 
+import System.Directory (createDirectoryIfMissing)
+
+import Ily.Configuration (Configuration(..))
+
+createIlyDir :: Configuration -> IO ()
+createIlyDir c = do 
     createDirectoryIfMissing True ilyDir
     where
-        ilyDir = target </> ".ily"
+        ilyDir = projectConfigDirectory c
 
 

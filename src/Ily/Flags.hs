@@ -1,4 +1,6 @@
-module Ily.Flags (Flag (..)) where
+module Ily.Flags
+    ( Flag (..)
+    ) where
 
 
 data Flag = Help

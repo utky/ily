@@ -1,9 +1,8 @@
-module Structure 
-    (
-        Scene(..)
-        , Chapter(..)
-        , Act(..)
-        , (###)
+module Doc
+    ( Scene(..)
+    , Chapter(..)
+    , Act(..)
+    , (###)
     ) where
 
 type Body = String

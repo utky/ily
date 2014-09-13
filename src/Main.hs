@@ -1,27 +1,17 @@
 module Main (main) where
 
-import Ily.Options
+import              System.Environment  (getArgs)
+import              Data.Default        (def)
 
-import System.Environment (getArgs)
-
-import System.Console.Haskeline (InputT, runInputT, defaultSettings, getInputLine, outputStrLn)
+import              Ily.Commands        (Runtime, Command, buildCommand, buildRuntime)
+import              Ily.Options         (Options)
+import              Ily.Configuration   
 
 main :: IO ()
 main = do
     (opts, args) <- getArgs >>= compileOptions
-    case args of 
-        [] -> runInputT defaultSettings loop
-        ["init"] -> undefined 
-        _ -> printUsage
+    runtime opts args defaultCfg
+    return ()
     where
-        printUsage = putStrLn "Usage: init"
-
-loop :: InputT IO ()
-loop = do
-    minput <- getInputLine "% "
-    case minput of
-        Nothing -> return ()
-        Just "quit" -> return ()
-        Just input -> do outputStrLn $ "Input was: " ++ input
-                         loop
-
+        defaultCfg = def
+        runtime = buildRuntime . buildCommand

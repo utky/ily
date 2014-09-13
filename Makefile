@@ -13,6 +13,9 @@ test: all
 prof:
 	cabal configure --disable-tests --enable-library-profiling --enable-executable-profiling && cabal build
 
+deps: 
+	cabal install --only-dependencies --enable-library-profiling --enable-tests --enable-benchmarks
+
 prep: submodules
 	#(cabal --version || (cabal update && cabal install cabal-dev)) && 
 	cabal sandbox init && \

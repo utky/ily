@@ -1,16 +1,24 @@
-module Ily.Options(
-                  Options (..)
-                  , compileOptions
-                  ) where
+module Ily.Options
+    ( Options (..)
+    -- , compileOptions
+    ) where
 
-import System.Console.GetOpt
-import Data.Maybe ( fromMaybe ) 
 
-data Options = Options {
-                  optVersion :: Bool
-                , optVerbose :: Bool
+import Data.Monoid
+import Data.Char
+import Text.Read
+import Options.Applicative
+
+
+{-- | Global Command line options
+-}
+data Options = Options
+            { version :: Bool
+            , verbose :: Bool
             }
 
+
+{-
 defaultOptions :: Options
 defaultOptions = Options {
                   optVersion = False
@@ -30,3 +38,5 @@ compileOptions argv =
         (o,n,[]  ) -> return (foldl (flip id) defaultOptions o, n)
         (_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
       where header = "Usage: ic [OPTION...] files..."
+
+-}
