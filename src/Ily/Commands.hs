@@ -16,6 +16,12 @@ import Options.Applicative
 
 data Runtime = Runtime Configuration Command 
 
+{- | Common options
+ -}
+data CommonOptions = CommonOptions
+                   { verbose :: Bool
+                   }
+
 {-- | A basic data structure of ily subcommand
 - 
 -}
@@ -53,16 +59,24 @@ buildCommand o p = undefined
 runCommand :: Command -> Source a -> Target b
 runCommand c i = undefined
 
-common = undefined
+common :: Parser CommonOptions
+common = CommonOptions
+    <$> switch
+        ( long "verbose"
+        <> help "show detail" )
+
 
 version :: Parser Command
 version = pure Version
+
+initialize :: Parser Command
+initialize = undefined
 
 parser :: Parser Command
 parser =  subparser
     ( 
         command "version" (info version (progDesc "indicate appilcation version"))
-    -- <>  command "init"    (info (progDesc "initialize current directory"))
+    <>  command "init"    (info initialize (progDesc "initialize current directory"))
     )
 
 parserInfo :: ParserInfo Command

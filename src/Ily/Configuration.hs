@@ -1,6 +1,7 @@
 module Ily.Configuration 
     ( Configuration(..)
     , projectConfig
+    , dataSourcePath
     ) where
 
 -- import Data.Default         (Default (..))
@@ -44,6 +45,10 @@ projectConfig = do
         where
             dotIly = ".ily"
 
+dataSourcePath :: Configuration -> FilePath
+dataSourcePath = (dirWithParent "issues.db") . globalConfigDirectory
+        where
+            dirWithParent = flip (</>)
 
 {--
 defaultConfig :: Configuration

@@ -12,8 +12,7 @@ type Key = Integer
 
 type Timestamp = Integer
 
-class Container a m where
-    contents :: a -> m b
+type Issues = [Project]
 
 data Project = Project
              { projectId :: Key
@@ -39,13 +38,3 @@ data Record = Record
             , recordStart :: Timestamp
             , recordEnd :: Timestamp
             }
-
-
-releases :: Project -> [Release]
-releases = undefined
-
-issues :: Release -> [Issue]
-issues = undefined
-
-records :: Issue -> [Record]
-records = undefined
