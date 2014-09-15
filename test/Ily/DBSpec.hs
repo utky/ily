@@ -22,6 +22,6 @@ spec = do
             ds = runDataSource ":memory:"
 
 
-runGetTables c = do
-            _ <- runRaw c "CREATE TABLE test (id INTEGER);"
-            getTables c
+runGetTables = do
+        raw "CREATE TABLE test (id INTEGER);"
+        action getTables

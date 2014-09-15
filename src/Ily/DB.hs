@@ -1,9 +1,15 @@
 module Ily.DB 
-    ( runDataSource
+    ( Query
+    , raw
+    , action
+    , runDataSource
     ) where
 
 import Database.HDBC
 import Database.HDBC.Sqlite3
+
+import System.FilePath
+import Paths_ily
 
 import Control.Exception as E
 
@@ -11,7 +17,15 @@ import Ily.Configuration (Configuration, dataSourcePath)
 
 data DataSource = SqliteDataSource String
 
--- newtype Query e = MkQuery { runQuery :: Connection -> IO e }
+newtype Query e = MkQuery { runQuery :: Connection -> IO e }
+
+instance Monad Query where
+        return e = MkQuery $ \_ -> return e
+        ma >>= f = MkQuery $ \c -> do
+            next <- ioresult c
+            (runQuery $ f next) c
+            where
+                ioresult c = runQuery ma c
 
 -- class Entity e where
 --     newEntity :: e -> Query e
@@ -26,11 +40,20 @@ data DataSource = SqliteDataSource String
 -- executeRaw :: String -> Query ()
 -- executeRaw s = MkQuery $ \c -> runRaw c s
 
-runDataSource :: String -> (Connection -> IO a) -> IO a
-runDataSource datapath handler = bracket
+runDataSource :: String -> Query a -> IO a
+runDataSource datapath query = bracket
         (connectSqlite3 datapath)
         (disconnect)
         (handler)
+        where
+            handler = runQuery query
+
+action :: (Connection -> IO a) -> Query a
+action f = MkQuery f
+
+raw :: String -> Query ()
+raw s = MkQuery $ \c -> runRaw c s
+        
 
 memory :: DataSource
 memory = SqliteDataSource ":memory:"
@@ -40,4 +63,13 @@ mkDataSource cfg = SqliteDataSource dpath
     where
         dpath = dataSourcePath cfg
 
+initializeSchema :: Query ()
+initializeSchema = MkQuery $ \c -> do
+        schema <- schemaDefinition
+        runRaw c schema
+        return ()
 
+schemaDefinition :: IO String
+schemaDefinition = do
+        sfile <- getDataFileName $ "sql" </> "schema.sql"
+        readFile sfile
