@@ -3,25 +3,40 @@ module Ily.DBSpec
         ) where
 
 import Test.Hspec
-import Test.QuickCheck
-import Control.Exception (evaluate, bracket)
+-- import Test.QuickCheck
+-- import Control.Exception (evaluate, bracket)
 
-import Database.HDBC
-import Database.HDBC.Sqlite3
+import Data.List (sort)
+import Database.HDBC (getTables)
+-- import Database.HDBC.Sqlite3
 
 
 
 import Ily.DB
 
+type TableName = String
+
 spec :: Spec
 spec = do
     describe "DB" $ do
-        it "can get connect" $
-            ds runGetTables `shouldReturn` ["test"]
+        it "can create tables" $
+            ds runGetTables >>= \ts -> 
+                tablenames ts `shouldBe` sort ["projects", "releases", "issues", "records"]
+        it "can clean up tables" $
+            ds cleanTables >>= \ts ->
+                tablenames ts `shouldBe` []
         where
             ds = runDataSource ":memory:"
+            tablenames = sort . filter (\n -> n /= "sqlite_sequence")
 
 
+runGetTables :: Query [TableName]
 runGetTables = do
-        raw "CREATE TABLE test (id INTEGER);"
+        initializeSchema
+        action getTables
+
+cleanTables :: Query [TableName]
+cleanTables = do
+        initializeSchema
+        cleanSchema
         action getTables

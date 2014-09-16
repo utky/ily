@@ -2,7 +2,10 @@ module Ily.DB
     ( Query
     , raw
     , action
+    , dbcommit
     , runDataSource
+    , initializeSchema
+    , cleanSchema
     ) where
 
 import Database.HDBC
@@ -13,9 +16,8 @@ import Paths_ily
 
 import Control.Exception as E
 
-import Ily.Configuration (Configuration, dataSourcePath)
+import Ily.Configuration (dataSourcePath)
 
-data DataSource = SqliteDataSource String
 
 newtype Query e = MkQuery { runQuery :: Connection -> IO e }
 
@@ -32,13 +34,6 @@ instance Monad Query where
 --     deleteEntity :: e => e -> Query e
 
 
--- withDataSource :: DataSource -> Query e -> IO e
--- withDataSource ds q = withWConn (wconn ds) . \c -> runQuery q c
---         where
---             wconn (SqliteDataSource dp) = ConnWrapper $ connectSqlite3 dp
--- 
--- executeRaw :: String -> Query ()
--- executeRaw s = MkQuery $ \c -> runRaw c s
 
 runDataSource :: String -> Query a -> IO a
 runDataSource datapath query = bracket
@@ -48,26 +43,34 @@ runDataSource datapath query = bracket
         where
             handler = runQuery query
 
+dbcommit = action $ \c -> do
+    commit c
+    return ()
+
+{- | Wrapper for HDBC interfaces
+-}
 action :: (Connection -> IO a) -> Query a
 action f = MkQuery f
 
+{- | Execution raw query statement
+-}
 raw :: String -> Query ()
 raw s = MkQuery $ \c -> runRaw c s
         
-
-memory :: DataSource
-memory = SqliteDataSource ":memory:"
-
-mkDataSource :: Configuration -> DataSource
-mkDataSource cfg = SqliteDataSource dpath
-    where
-        dpath = dataSourcePath cfg
-
+{- | Execute DDL
+-}
 initializeSchema :: Query ()
 initializeSchema = MkQuery $ \c -> do
         schema <- schemaDefinition
         runRaw c schema
         return ()
+
+cleanSchema :: Query ()
+cleanSchema = raw $ qBody
+        where
+            tables = ["projects", "releases", "issues", "records"]
+            tablename t = "DROP TABLE " ++ t ++ " ;"
+            qBody = foldr (++) "" $ map tablename tables
 
 schemaDefinition :: IO String
 schemaDefinition = do

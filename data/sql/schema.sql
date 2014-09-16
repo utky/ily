@@ -26,5 +26,6 @@ CREATE TABLE records (
   description TEXT,
   started_on INTEGER,
   finished_on INTEGER,
+  issue_id INTEGER,
   FOREIGN KEY(issue_id) REFERENCES issues(id)
 );
