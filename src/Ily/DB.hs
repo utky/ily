@@ -1,5 +1,8 @@
 module Ily.DB 
     ( Query
+    , statement
+    , executeStatement
+    , listStatement
     , raw
     , action
     , dbcommit
@@ -16,8 +19,7 @@ import Paths_ily
 
 import Control.Exception as E
 
-import Ily.Configuration (dataSourcePath)
-
+type Row = [(String, SqlValue)]
 
 newtype Query e = MkQuery { runQuery :: Connection -> IO e }
 
@@ -34,7 +36,20 @@ instance Monad Query where
 --     deleteEntity :: e => e -> Query e
 
 
+statement :: String -> Query Statement
+statement s = MkQuery $ \c -> prepare c s
 
+
+executeStatement :: Statement -> [SqlValue] -> Query Integer
+executeStatement s vs = MkQuery $ \_ -> execute s vs
+
+listStatement :: Statement -> [SqlValue] -> Query [Row]
+listStatement s vs = MkQuery $ \_ -> do
+        _ <- execute s vs
+        fetchAllRowsAL s
+
+{- | Connect to sqlite database with specified path and run quey
+-}
 runDataSource :: String -> Query a -> IO a
 runDataSource datapath query = bracket
         (connectSqlite3 datapath)
@@ -43,6 +58,7 @@ runDataSource datapath query = bracket
         where
             handler = runQuery query
 
+dbcommit :: Query ()
 dbcommit = action $ \c -> do
     commit c
     return ()
@@ -65,6 +81,8 @@ initializeSchema = MkQuery $ \c -> do
         runRaw c schema
         return ()
 
+{- | Destroy existing schema without backup
+-}
 cleanSchema :: Query ()
 cleanSchema = raw $ qBody
         where
@@ -72,6 +90,8 @@ cleanSchema = raw $ qBody
             tablename t = "DROP TABLE " ++ t ++ " ;"
             qBody = foldr (++) "" $ map tablename tables
 
+{- | Read Schema definition from data file.
+-}
 schemaDefinition :: IO String
 schemaDefinition = do
         sfile <- getDataFileName $ "sql" </> "schema.sql"

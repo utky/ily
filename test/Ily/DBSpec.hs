@@ -7,7 +7,7 @@ import Test.Hspec
 -- import Control.Exception (evaluate, bracket)
 
 import Data.List (sort)
-import Database.HDBC (getTables)
+import Database.HDBC (getTables, toSql)
 -- import Database.HDBC.Sqlite3
 
 
@@ -20,13 +20,16 @@ spec :: Spec
 spec = do
     describe "DB" $ do
         it "can create tables" $
-            ds runGetTables >>= \ts -> 
+            datasource runGetTables >>= \ts -> 
                 tablenames ts `shouldBe` sort ["projects", "releases", "issues", "records"]
         it "can clean up tables" $
-            ds cleanTables >>= \ts ->
+            datasource cleanTables >>= \ts ->
                 tablenames ts `shouldBe` []
+        it "can insert and select data" $
+            datasource insert >>= \cnt ->
+                cnt `shouldBe` 1
         where
-            ds = runDataSource ":memory:"
+            datasource = runDataSource ":memory:"
             tablenames = sort . filter (\n -> n /= "sqlite_sequence")
 
 
@@ -40,3 +43,17 @@ cleanTables = do
         initializeSchema
         cleanSchema
         action getTables
+
+insert :: Query Integer
+insert = do
+        initializeSchema
+        newProject <- statement "INSERT INTO projects(name, description) VALUES (?, ?)"
+        cnt <- executeStatement newProject [toSql "hello", toSql "world"]
+        dbcommit
+        return cnt
+        -- projectsRow <- statement "SELECT * FROM projects"
+        -- rows <- listStatement projectsRow []
+        -- return $ length rows
+
+
+
