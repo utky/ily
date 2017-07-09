@@ -110,6 +110,11 @@ sml :-
 <0>  "while"                 { action $ const TWhile }
 
 <0>  $digit+               { action (TInt . read) }
+
+<0>     \# \"              { begin char }
+<char>  $graphic \"        { action (TChar . head) }
+<char>  \"                 { begin 0 }
+
 <0>  \"                    { begin string }
 <string> @string*          { action TStr }
 <string> \"                { begin 0 }
@@ -123,6 +128,7 @@ sml :-
 data Token
   = TInt Integer
   | TStr String
+  | TChar Char
   -- abstype
   | TAbsType
   -- and

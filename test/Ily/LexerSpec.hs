@@ -21,7 +21,7 @@ spec = do
     it "scans 2 digit integer" $
       "12" `shouldScan` (L.TInt 12)
     it "scans negative integer" $
-      "-1" `shouldScan` (L.TInt (-1))
+      "~1" `shouldScan` (L.TInt (-1))
 
   describe "string" $ do
     it "scans alphabet string" $
@@ -35,8 +35,15 @@ spec = do
     it "scans multibyte with newline string" $
       "\"文字列\nalpha123\"" `shouldScan` (L.TStr "文字列\nalpha123")
 
-  describe "reserved" $ do
+  describe "character" $ do
+    it "scans alphabet char" $
+      "#\"a\"" `shouldScan` (L.TChar 'a')
+    it "scans numeric char" $
+      "#\"1\"" `shouldScan` (L.TChar '1')
+    it "scans multibyte char" $
+      "#\"字\"" `shouldScan` (L.TChar '字')
 
+  describe "reserved" $ do
     it "scans (" $
       "(" `shouldScan` L.TLParen
     it "scans )" $
