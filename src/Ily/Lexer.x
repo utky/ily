@@ -7,6 +7,7 @@ module Ily.Lexer
   , run
   , scanner
   ) where
+
 }
 
 %wrapper "monad"
@@ -53,6 +54,7 @@ $symbol = [\!\%\&\$\#\+\-\/\:\<\=\>\?\@\\\~\'\^\|\*]
 $idchar      = [$letter $digit \_\']
 
 @id        = ($letter $idchar*) | $symbol+
+@tyvarid   = \' $letter $idchar*
 @strid     = $letter $idchar*
 @longid    = (@strid \.)+ @id
 
@@ -108,6 +110,7 @@ sml :-
 <0>  "with"                  { action $ const TWith }
 <0>  "withtype"              { action $ const TWithType }
 <0>  "while"                 { action $ const TWhile }
+<0>  "."                     { action $ const TDot }
 
 <0>  $digit+               { action (TInt . read) }
 
@@ -119,8 +122,9 @@ sml :-
 <string> @string*          { action TStr }
 <string> \"                { begin 0 }
 
-<0>  @id                  { action TId }
-<0>  @longid                  { action TLongId }
+<0>  @id                   { action TId }
+<0>  @longid               { action (TLongId . split '.')}
+<0>  @tyvarid              { action TTyV }
 
 {
 
@@ -225,21 +229,40 @@ data Token
   | TFatArrow
   -- #
   | TSharp
+  -- .
+  | TDot
   -- Identifier
   | TId String
-  -- Long identifier
-  | TLongId String
+  -- Long Identifier
+  | TLongId [String]
+  -- Type variable
+  | TTyV String
   -- End of file
   | TEOF
   deriving (Eq,Show)
 
+type P = Alex
+
 action :: (String -> Token) -> AlexAction Token
-action f = token handler where
-  handler (pos, prev, rest, input) len = f (take len input)
+action f = token handler
+  where
+    handler (pos, prev, rest, input) len = f (take len input)
+
+split :: Char -> String -> [String]
+split d = reverse . fst . finalise . foldl feed ([], "")
+  where
+    feed :: ([String], String) -> Char -> ([String], String)
+    feed (acc, tok) x
+      | x == d    = let newAcc = (done tok):acc
+                    in  (newAcc, "")
+      | otherwise = (acc, comsume tok x)
+    comsume s i = i:s
+    done s = reverse s
+    finalise (acc, "") = (acc, "")
+    finalise (acc, tok) = ((done tok):acc, "")
 
 alexEOF = return TEOF
 
-type P = Alex
 
 lexer :: (Token -> P a) -> P a
 lexer f = alexMonadScan >>= f

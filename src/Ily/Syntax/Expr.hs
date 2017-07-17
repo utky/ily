@@ -68,17 +68,17 @@ data Dec
   -- | abstype declaration
   | DAbsType [DatBind] Dec
   -- | exception declaration
-  | DExc ExBind
+  | DExc [ExBind]
   -- | local declaration
   | DLocal Dec Dec
   -- | open declaration (N >= 1)
-  | DOpen [I.StrId]
+  | DOpen [(I.Long I.StrId)]
   -- | sequantial declaration
   | DSeq Dec Dec
   -- | infix (L) directive
-  | DInfix  (Maybe Int) [I.VId]
+  | DInfix  (Maybe Integer) [I.VId]
   -- | infix (R) directive
-  | DInfixr (Maybe Int) [I.VId]
+  | DInfixr (Maybe Integer) [I.VId]
   -- | nonfix directive
   | DNonfix [I.VId]
   deriving (Show, Eq)
@@ -86,7 +86,10 @@ data Dec
 -- | Value bindings
 data ValBind
   = VBind P.Pat Exp
-  | VRec ValBind
+  deriving (Show, Eq)
+
+data ValRec
+  = ValRec
   deriving (Show, Eq)
 
 -- | Type bindings
@@ -101,13 +104,12 @@ data DatBind
 
 -- | Constructor bindings
 data ConBind
-  = CBind I.VId (Maybe T.Ty)
+  = CBind I.Op I.VId (Maybe T.Ty)
   deriving (Show, Eq)
 
 -- | Exception bindings
 data ExBind
-  -- TODO: T.B.D.
-  = Dummy
+  = ExBind I.Op I.VId (Maybe T.Ty)
   deriving (Show, Eq)
 
 

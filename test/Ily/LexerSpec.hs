@@ -161,7 +161,9 @@ spec = do
       "&&" `shouldScan` (L.TId "&&")
     it "scans || identifier" $
       "||" `shouldScan` (L.TId "||")
-    it "scans single heading long identifier" $
-      "foo.bar" `shouldScan` (L.TLongId "foo.bar")
-    it "scans double heading long identifier" $
-      "foo.bar.qux" `shouldScan` (L.TLongId "foo.bar.qux")
+
+  describe "long identifier" $ do
+    it "scans alphabet identifier" $
+      "a.b.c" `shouldScan` (L.TLongId ["a", "b", "c"])
+    it "scans large alphabet identifier" $
+      "Alpha.Beta.Gamma" `shouldScan` (L.TLongId ["Alpha", "Beta", "Gamma"])

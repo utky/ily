@@ -1,7 +1,7 @@
 -- | Identifiers
 module Ily.Syntax.Id where
 
-type Name
+type Id
   = String
 
 -- Indicator infix as normal ident
@@ -11,11 +11,6 @@ data Op
   deriving (Show, Eq)
 
 -- Primitives
-
--- Identifier without qualifier
-newtype Id
-  = Id Name
-  deriving (Eq, Show)
 
 -- | Identifier qualified with structure id
 data Long a
