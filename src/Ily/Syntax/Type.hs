@@ -9,7 +9,7 @@ data Ty
   -- | record type expression
   | TyRec [TyRow]
   -- | type construction
-  | TyTyCon [Ty] (Id.Long Id.TyCon)
+  | TyTyCon [Ty] Id.TyCon
   -- | function type expression (R)
   | TyFunc Ty Ty
   -- | paren enclosing

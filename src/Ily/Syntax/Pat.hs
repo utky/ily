@@ -11,7 +11,7 @@ data AtPat
   -- | special constant
   | PCon Const.SCons
   -- | value identifier
-  | PVId Id.Op (Id.Long Id.VId)
+  | PVId Id.Op Id.VId
   -- | record
   | PRec [PatRow]
   -- | parens enclosing
@@ -32,7 +32,7 @@ data Pat
   -- | atomic
   = PAtPat AtPat
   -- | constructed pattern
-  | PCtor Id.Op (Id.Long Id.VId) AtPat
+  | PCtor Id.Op Id.VId AtPat
   -- | infixed value construction
   | PInfix Pat Id.VId Pat
   -- | typed

@@ -19,16 +19,18 @@ data Long a
 
 -- 
 
-newtype VId
+data VId
   = VId Id
+  | QVId [Id] Id
   deriving (Eq, Show)
 
 newtype TyVar
   = TyVar Id
   deriving (Eq, Show)
 
-newtype TyCon
+data TyCon
   = TyCon Id
+  | QTyCon [Id] Id
   deriving (Eq, Show)
 
 -- | The class Lab is extended to include the numeric labels 1 2 3 ···,
@@ -37,6 +39,7 @@ newtype Lab
   = Lab Id
   deriving (Eq, Show)
 
-newtype StrId
+data StrId
   = StrId Id
+  | QStrId [Id] Id
   deriving (Eq, Show)

@@ -1,10 +1,11 @@
 {
+{-# OPTIOINS_GHC -a -g -c #-}
 module Ily.Parser where
 
 import Ily.Lexer (Token(..), P, lexer, parseFail)
 import Ily.Syntax
   ( SCons(..)
-  , Long(..)
+  , Id
   , VId(..)
   , TyVar(..)
   , TyCon(..)
@@ -33,7 +34,8 @@ import Ily.Syntax
 %monad{P}
 %lexer{lexer}{TEOF}
 %name parseScons scon
-%name parseDec   dec
+%name parsePat   pat
+-- %name parseDec   dec
 %tokentype { Token }
 %error { parseError }
 
@@ -186,8 +188,9 @@ scon :: { SCons }
 vid :: { VId }
     : id   { VId $1 }
 
-longvid :: { Long VId }
-        : longid { makeLong VId $1 }
+longvid :: { VId }
+        : id     { VId $1 }
+        | longid { makeLong QVId $1 }
 
 tyvar :: { TyVar }
       : tyvarid   { TyVar $1 }
@@ -195,11 +198,16 @@ tyvar :: { TyVar }
 tycon :: { TyCon }
       : id   { TyCon $1 }
 
-longtycon :: { Long TyCon }
-          : longid { makeLong TyCon $1 }
+longtycon :: { TyCon }
+          : id     { TyCon $1 }
+          | longid { makeLong QTyCon $1 }
 
-longstrid :: { Long StrId }
-          : longid { makeLong StrId $1 }
+strid     :: { StrId }
+          : id   { StrId $1 }
+
+longstrid :: { StrId }
+          : id     { StrId $1 }
+          | longid { makeLong QStrId $1 }
 
 -- TODO: could be int as label of tuple
 lab :: { Lab }
@@ -214,12 +222,20 @@ atpat :: { AtPat }
       : '_'                  { PWildcard }
       | scon                 { PCon $1 }
       | ope longvid          { PVId $1 $2 }
-      | '{' rows(patrow) '}' { PRec $2 }
+      | '{' patrows '}' { PRec $2 }
       | '(' pat ')'          { PPat $2 }
 
+patrows :: { [PatRow] }
+        : patrows_ { reverse $1 }
+
+patrows_ :: { [PatRow] }
+         :                     { [] }
+         | patrow              { [$1] }
+         | patrows_ ',' patrow { $3 : $1 }
+
 patrow :: { PatRow }
-       : '...'       { PRWildcard }
-       | lab '=' pat { PRow $1 $3 }
+       :  '...'       { PRWildcard }
+       | lab '=' pat  { PRow $1 $3 }
 
 pat :: { Pat }
     : atpat                               { PAtPat $1 }
@@ -230,89 +246,98 @@ pat :: { Pat }
 
 ty :: { Ty }
    : tyvar                { TyTyVar $1 }
-   | '{' rows(tyrow) '}'  { TyRec $2 }
+   | '{' tyrows '}'       { TyRec $2 }
    | seq(ty) longtycon    { TyTyCon $1 $2 }
    | ty '->' ty           { TyFunc $1 $3 }
    | '(' ty ')'           { TyParen $2 }
+
+tyrows :: { [TyRow] }
+       : tyrows_ { reverse $1 }
+
+tyrows_ :: { [TyRow] }
+        :                     { [] }
+        | tyrow              { [$1] }
+        | tyrows_ ',' tyrow { $3 : $1 }
+
 
 tyrow :: { TyRow }
       : lab ':' ty { TyRow $1 $3 }
 
 -- | Expression
-atexp :: { AtExp }
-      : scon                 { ESCon $1 }
-      | ope longvid          { EVId $1 $2 }
-      | '{' rows(exprow) '}' { ERec $2 }
-      | let dec in exp end   { ELet $2 $4 }
-      | '(' exp ')'          { EParen $2 }
-
-exprow :: { ExpRow }
-       : lab '=' exp { ERow $1 $3 }
-
-exp :: { Exp }
-    : atexp { EAtExp $1 }
-    | exp atexp { EApp $1 $2 }
-    | exp vid exp { EInfixApp $1 $2 $3 }
-    | exp ':' ty  { ETyped $1 $3 }
-    | exp handle match { EHandle $1 $3 }
-    | raise exp { ERaise $2 }
-    | fn match { EFn $2 }
-
-match :: { Match }
-      : sep1(mrule, '|') { MMRule $1 }
-
-mrule :: { MRule }
-      : pat '=>' exp  { MRule $1 $3 }
+-- atexp :: { AtExp }
+--       : scon                 { ESCon $1 }
+--       | ope longvid          { EVId $1 $2 }
+--       | '{' rows(exprow) '}' { ERec $2 }
+--       | let dec in exp end   { ELet $2 $4 }
+--       | '(' exp ')'          { EParen $2 }
+-- 
+-- exprow :: { ExpRow }
+--        : lab '=' exp { ERow $1 $3 }
+-- 
+-- exp :: { Exp }
+--     : atexp { EAtExp $1 }
+--     | exp atexp { EApp $1 $2 }
+--     | exp vid exp { EInfixApp $1 $2 $3 }
+--     | exp ':' ty  { ETyped $1 $3 }
+--     | exp handle match { EHandle $1 $3 }
+--     | raise exp { ERaise $2 }
+--     | fn match { EFn $2 }
+-- 
+-- match :: { Match }
+--       : sep1(mrule, '|') { MMRule $1 }
+-- 
+-- mrule :: { MRule }
+--       : pat '=>' exp  { MRule $1 $3 }
 
 -- | Declaration
-dec :: { Dec }
-    : val seq(tyvar) valbinds { DVal $2 $3 }
-    | type typbinds          { DType $2 }
-    | datatype datbinds      { DDataType $2 }
-    -- TODO Data type rep concrete syntax
-    | abstype datbinds with dec end { DAbsType $2 $4 }
-    | exception exbinds { DExc $2 }
-    | local dec in dec end { DLocal $2 $4 }
-    | open seq1(longstrid) { DOpen $2 }
-    | dec option(';') dec { DSeq $1 $3 }
-    | infix option(int) seq1(vid) { DInfix $2 $3 }
-    | infixr option(int) seq1(vid) { DInfixr $2 $3 }
-    | nonfix seq1(vid) { DNonfix $2 }
-
--- | TODO Recursive
-valbinds :: { [ValBind] }
-         : andseq(valbind) { $1 }
-
-valbind  :: { ValBind }
-         : pat '=' exp  { VBind $1 $3 }
-
-typbinds :: { [TypeBind] }
-         : andseq(typbind) { $1 }
-
-typbind :: { TypeBind }
-        : seq(tyvar) tycon '=' ty { TBind $1 $2 $4 }
-
-datbinds :: { [DatBind] }
-         : andseq(datbind) { $1 }
-
-datbind :: { DatBind }
-        : seq(tyvar) tycon '=' conbinds { DBind $1 $2 $4 }
-
-conbinds :: { [ConBind] }
-         : sep1(conbind, '|')  { $1 }
-
-conbind :: { ConBind }
-        : ope vid option(snd(of, ty)) { CBind $1 $2 $3 }
-
-exbinds :: { [ExBind] }
-        : andseq(exbind) { $1 }
-
-exbind :: { ExBind }
-       : ope vid option(snd(of, ty)) { ExBind $1 $2 $3 }
+-- dec :: { Dec }
+--     : val seq(tyvar) valbinds { DVal $2 $3 }
+--     | type typbinds          { DType $2 }
+--     | datatype datbinds      { DDataType $2 }
+--     -- TODO Data type rep concrete syntax
+--     | abstype datbinds with dec end { DAbsType $2 $4 }
+--     | exception exbinds { DExc $2 }
+--     | local dec in dec end { DLocal $2 $4 }
+--     | open seq1(longstrid) { DOpen $2 }
+--     | dec option(';') dec { DSeq $1 $3 }
+--     | infix option(int) seq1(vid) { DInfix $2 $3 }
+--     | infixr option(int) seq1(vid) { DInfixr $2 $3 }
+--     | nonfix seq1(vid) { DNonfix $2 }
+-- 
+-- -- | TODO Recursive
+-- valbinds :: { [ValBind] }
+--          : andseq(valbind) { $1 }
+-- 
+-- valbind  :: { ValBind }
+--          : pat '=' exp  { VBind $1 $3 }
+-- 
+-- typbinds :: { [TypeBind] }
+--          : andseq(typbind) { $1 }
+-- 
+-- typbind :: { TypeBind }
+--         : seq(tyvar) tycon '=' ty { TBind $1 $2 $4 }
+-- 
+-- datbinds :: { [DatBind] }
+--          : andseq(datbind) { $1 }
+-- 
+-- datbind :: { DatBind }
+--         : seq(tyvar) tycon '=' conbinds { DBind $1 $2 $4 }
+-- 
+-- conbinds :: { [ConBind] }
+--          : sep1(conbind, '|')  { $1 }
+-- 
+-- conbind :: { ConBind }
+--         : ope vid option(snd(of, ty)) { CBind $1 $2 $3 }
+-- 
+-- exbinds :: { [ExBind] }
+--         : andseq(exbind) { $1 }
+-- 
+-- exbind :: { ExBind }
+--        : ope vid option(snd(of, ty)) { ExBind $1 $2 $3 }
 
 {
-makeLong :: (String -> a) -> [String] -> Long a
-makeLong f xs = Long (map StrId (init xs)) (f $ last xs)
+makeLong :: ([String] -> String -> a) -> [String] -> a
+makeLong f xs = f (init xs) (last xs)
 
 parseError _ = parseFail "Parse failure"
 }

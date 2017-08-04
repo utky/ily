@@ -10,7 +10,7 @@ data AtExp
   -- | special constant
   = ESCon C.SCons
   -- | value identifier
-  | EVId I.Op (I.Long I.VId)
+  | EVId I.Op I.VId
   -- | record
   | ERec [ExpRow]
   -- | local declaration
@@ -72,7 +72,7 @@ data Dec
   -- | local declaration
   | DLocal Dec Dec
   -- | open declaration (N >= 1)
-  | DOpen [(I.Long I.StrId)]
+  | DOpen [I.StrId]
   -- | sequantial declaration
   | DSeq Dec Dec
   -- | infix (L) directive
