@@ -6,6 +6,9 @@ build:
 test:
 	stack test
 
+happy:
+	stack exec happy -- -i src/Ily/Parser.y
+
 hdevstart:
 	hdevtools admin --start-server
 

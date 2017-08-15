@@ -21,6 +21,45 @@ spec = do
     it "parses character" $ 
       shouldParse P.parseScons "#\"字\"" (S.SChar '字')
 
+  describe "type" $ do
+    it "parse tyvar" $ 
+      shouldParse P.parseType "'a" (S.TyTyVar (S.TyVar "'a"))
+    it "parse mono tycon" $ 
+      shouldParse P.parseType "int" (S.TyTyCon [] (S.TyCon "int"))
+    it "parse single tyvar tycon" $ 
+      shouldParse P.parseType "'a option"
+        (S.TyTyCon [(S.TyTyVar (S.TyVar "'a"))] (S.TyCon "option"))
+    it "parse single type application tycon" $ 
+      shouldParse P.parseType "int option"
+        (S.TyTyCon [(S.TyTyCon [] (S.TyCon "int"))] (S.TyCon "option"))
+    it "parse type application with paren tycon" $ 
+      shouldParse P.parseType "() option"
+        (S.TyTyCon [] (S.TyCon "option"))
+    it "parse multiple tyvar tycon" $ 
+      shouldParse P.parseType "('k, 'v) map"
+        (S.TyTyCon [(S.TyTyVar (S.TyVar "'k"))
+                  , (S.TyTyVar (S.TyVar "'v"))] (S.TyCon "map"))
+    it "parse multiple type applicatoin tycon" $ 
+      shouldParse P.parseType "(int, string) map"
+        (S.TyTyCon [(S.TyTyCon [] (S.TyCon "int"))
+                  , (S.TyTyCon [] (S.TyCon "string"))] (S.TyCon "map"))
+    it "parse ty func" $ 
+      shouldParse P.parseType "int -> bool"
+        (S.TyFunc (S.TyTyCon [] (S.TyCon "int"))
+                  (S.TyTyCon [] (S.TyCon "bool")))
+    it "parse tyvar func" $ 
+      shouldParse P.parseType "'a -> 'a"
+        (S.TyFunc (S.TyTyVar (S.TyVar "'a"))
+                  (S.TyTyVar (S.TyVar "'a")))
+    it "parse tyrows" $ 
+      shouldParse P.parseType "{ one : int, two : bool }"
+        (S.TyRec
+          [ (S.TyRow (S.Lab "one")
+                     (S.TyTyCon [] (S.TyCon "int")))
+          , (S.TyRow (S.Lab "two")
+                     (S.TyTyCon [] (S.TyCon "bool")))
+          ])
+
   describe "pat" $ do
     it "atpat _" $ 
       shouldParse P.parsePat "_"  (S.PAtPat S.PWildcard)
@@ -92,9 +131,97 @@ spec = do
           (S.TyRec
             [(S.TyRow (S.Lab "f") (S.TyTyCon [] (S.TyCon "t")))]))
 
---  describe "dec" $ do
---    it "int value" $ 
---      shouldParse P.parseDec "val i = 1"
---        (S.DVal []
---          [(S.VBind (S.PAtPat (S.PVId S.Nop (S.VId "i")))
---                   (S.EAtExp (S.ESCon (S.SInt 1))))])
+  describe "exp" $ do
+    it "exp scons" $ 
+      shouldParse P.parseExp "1"
+        (S.EAtExp (S.ESCon (S.SInt 1)))
+    it "exp vid" $ 
+      shouldParse P.parseExp "x"
+        (S.EAtExp (S.EVId S.Nop (S.VId "x")))
+    it "exp record" $ 
+      shouldParse P.parseExp "{ x = 1, y = \"why\" }"
+        (S.EAtExp (S.ERec [ (S.ERow
+                              (S.Lab "x")
+                              (S.EAtExp (S.ESCon (S.SInt 1))))
+                          , (S.ERow
+                              (S.Lab "y")
+                              (S.EAtExp (S.ESCon (S.SStr "why"))))
+                          ]))
+    -- TODO
+    -- it "exp let" $ 
+
+    it "exp application" $ 
+      shouldParse P.parseExp "inc 1"
+        (S.EApp
+          (S.EAtExp (S.EVId S.Nop (S.VId "inc")))
+          (S.ESCon (S.SInt 1)))
+
+    it "exp infix app" $ 
+      shouldParse P.parseExp "1 + 2"
+        (S.EInfixApp
+          (S.EAtExp (S.ESCon (S.SInt 1)))
+          (S.VId "+")
+          (S.EAtExp (S.ESCon (S.SInt 2))))
+
+    it "exp typed" $ 
+      shouldParse P.parseExp "1: int"
+        (S.ETyped
+          (S.EAtExp (S.ESCon (S.SInt 1)))
+          (S.TyTyCon [] (S.TyCon "int")))
+
+    -- TODO: handle
+    -- TODO: raise
+    
+    it "exp fn" $ 
+      shouldParse P.parseExp "fn x => x + 1"
+        (S.EFn
+          (S.MMRule
+            [(S.MRule
+               (S.PAtPat (S.PVId S.Nop (S.VId "x")))
+               (S.EInfixApp
+                 (S.EAtExp (S.EVId S.Nop (S.VId "x")))
+                 (S.VId "+")
+                 (S.EAtExp (S.ESCon (S.SInt 1)))))
+            ]))
+
+  describe "dec" $ do
+
+    it "dec int value" $ 
+      shouldParse P.parseDec "val i = 1"
+        (S.DVal []
+          [(S.VBind
+             (S.PAtPat (S.PVId S.Nop (S.VId "i")))
+             (S.EAtExp (S.ESCon (S.SInt 1))))])
+
+    it "dec type alias" $ 
+      shouldParse P.parseDec "type i = int"
+        (S.DType
+          [ (S.TBind []
+              (S.TyCon "i") 
+              (S.TyTyCon [] (S.TyCon "int")))])
+
+    it "dec type alias with tyvar" $ 
+      shouldParse P.parseDec "type 'a opt = 'a option"
+        (S.DType
+          [ (S.TBind
+              [(S.TyVar "'a")]
+              (S.TyCon "opt") 
+              (S.TyTyCon
+                [(S.TyTyVar (S.TyVar "'a"))]
+                (S.TyCon "option")))])
+
+    it "dec datatype" $ 
+      shouldParse P.parseDec "datatype bool = true | false"
+        (S.DDataType
+          [ (S.DBind
+              []
+              (S.TyCon "bool") 
+              [ (S.CBind
+                  S.Nop
+                  (S.VId "true")
+                  Nothing)
+              , (S.CBind
+                  S.Nop
+                  (S.VId "false")
+                  Nothing)
+              ])])
