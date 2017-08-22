@@ -74,6 +74,7 @@ sml :-
 <0>  ";"                     { action $ const TSemiColon }
 <0>  "..."                   { action $ const TRowWild }
 <0>  "_"                     { action $ const TValWild }
+<0>  "|"                     { action $ const TBar }
 <0>  "="                     { action $ const TEq }
 <0>  "=>"                    { action $ const TFatArrow }
 <0>  "->"                    { action $ const TArrow }
@@ -267,7 +268,11 @@ alexEOF = return TEOF
 lexer :: (Token -> P a) -> P a
 lexer f = alexMonadScan >>= f
 
-parseFail = alexError
+parseFail :: String -> P a
+parseFail s = do
+  ((AlexPn len linen coln), _, _, _) <- alexGetInput
+  let msg = s ++ " at " ++ (show linen) ++ ":" ++ (show coln)
+  alexError msg
 
 scanner = alexMonadScan
 

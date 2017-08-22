@@ -66,6 +66,8 @@ spec = do
       "..." `shouldScan` L.TRowWild
     it "scans _" $
       "_" `shouldScan` L.TValWild
+    it "scans |" $
+      "|" `shouldScan` L.TBar
     it "scans =" $
       "=" `shouldScan` L.TEq
     it "scans =>" $

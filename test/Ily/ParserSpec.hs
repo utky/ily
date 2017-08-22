@@ -97,7 +97,7 @@ spec = do
               (S.Lab "age")
               (S.PAtPat (S.PCon (S.SInt 20))))]))
     it "pat constructed pattern" $ 
-      shouldParse P.parsePat "Just x"
+      shouldParse P.parsePat "(Just x)"
         (S.PCtor S.Nop
           (S.VId "Just")
           (S.PVId S.Nop (S.VId "x")))
@@ -131,13 +131,17 @@ spec = do
           (S.TyRec
             [(S.TyRow (S.Lab "f") (S.TyTyCon [] (S.TyCon "t")))]))
 
+  -- Expression
   describe "exp" $ do
+
     it "exp scons" $ 
       shouldParse P.parseExp "1"
         (S.EAtExp (S.ESCon (S.SInt 1)))
+
     it "exp vid" $ 
       shouldParse P.parseExp "x"
         (S.EAtExp (S.EVId S.Nop (S.VId "x")))
+
     it "exp record" $ 
       shouldParse P.parseExp "{ x = 1, y = \"why\" }"
         (S.EAtExp (S.ERec [ (S.ERow
@@ -147,14 +151,35 @@ spec = do
                               (S.Lab "y")
                               (S.EAtExp (S.ESCon (S.SStr "why"))))
                           ]))
-    -- TODO
-    -- it "exp let" $ 
 
     it "exp application" $ 
       shouldParse P.parseExp "inc 1"
         (S.EApp
           (S.EAtExp (S.EVId S.Nop (S.VId "inc")))
           (S.ESCon (S.SInt 1)))
+
+    it "exp let val in vid" $ 
+      shouldParse P.parseExp "let val x = 1 in x end"
+        (S.EAtExp
+          (S.ELet
+            (S.DVal []
+              [(S.VBind
+                 (S.PAtPat (S.PVId S.Nop (S.VId "x")))
+                 (S.EAtExp (S.ESCon (S.SInt 1))))])
+            (S.EAtExp
+              (S.EVId S.Nop (S.VId "x")))))
+
+    it "exp let val in fun app" $ 
+      shouldParse P.parseExp "let val x = 1 in f x end"
+        (S.EAtExp
+          (S.ELet
+            (S.DVal []
+              [(S.VBind
+                 (S.PAtPat (S.PVId S.Nop (S.VId "x")))
+                 (S.EAtExp (S.ESCon (S.SInt 1))))])
+            (S.EApp
+              (S.EAtExp (S.EVId S.Nop (S.VId "f")))
+              (S.EVId S.Nop (S.VId "x")))))
 
     it "exp infix app" $ 
       shouldParse P.parseExp "1 + 2"
@@ -184,6 +209,7 @@ spec = do
                  (S.EAtExp (S.ESCon (S.SInt 1)))))
             ]))
 
+  -- Declaration
   describe "dec" $ do
 
     it "dec int value" $ 
@@ -225,3 +251,16 @@ spec = do
                   (S.VId "false")
                   Nothing)
               ])])
+
+    it "dec open one modules" $ 
+      shouldParse P.parseDec "open 日本語"
+        (S.DOpen
+          [ (S.StrId "日本語")
+          ])
+
+    it "dec open two modules" $ 
+      shouldParse P.parseDec "open List 日本語"
+        (S.DOpen
+          [ (S.StrId "List")
+          , (S.StrId "日本語")
+          ])

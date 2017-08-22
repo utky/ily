@@ -194,8 +194,8 @@ sep(p, q)      : rev_sep(p, q)          { reverse $1 }
 -- andseq(p)      : sep1(p, and)        { $1 }
 
 seq(p)         : '(' sep(p, ',') ')'    { $2 }
---               | p                      { [$1] }
---               |                        { [] }
+               | p                      { [$1] }
+               |                        { [] }
 
 
 list_(p)       : list_(p) p  { $2 : $1 }
@@ -305,7 +305,7 @@ atexp :: { AtExp }
       : scon                 { ESCon $1 }
       | ope longvid          { EVId $1 $2 }
       | '{' exprows '}'      { ERec $2 }
-      --| let dec in exp end   { ELet $2 $4 }
+      | let dec in exp end   { ELet $2 $4 }
       -- ^ TODO: declaration
       | '(' exp ')'          { EParen $2 }
 
@@ -325,8 +325,10 @@ exp :: { Exp }
     | exp atexp { EApp $1 $2 }
     | exp vid exp { EInfixApp $1 $2 $3 }
     | exp ':' ty  { ETyped $1 $3 }
-    | exp handle match { EHandle $1 $3 }
-    | raise exp { ERaise $2 }
+    -- | exp handle match { EHandle $1 $3 }
+    -- ^ TODO: not used
+    -- | raise exp { ERaise $2 }
+    -- ^ TODO: not used
     | fn match { EFn $2 }
 
 match :: { Match }
@@ -349,13 +351,15 @@ dec :: { Dec }
     | type typbinds                 { DType $2 }
     | datatype datbinds             { DDataType $2 }
     -- TODO Data type rep concrete syntax
-    | abstype datbinds with dec end { DAbsType $2 $4 }
-    | exception exbinds             { DExc $2 }
+    -- abstype and exception is not mandatory
+--    | abstype datbinds with dec end { DAbsType $2 $4 }
+--    | exception exbinds             { DExc $2 }
     | local dec in dec end          { DLocal $2 $4 }
     | open list1(longstrid)          { DOpen $2 }
-    | dec option(';') dec           { DSeq $1 $3 }
+--    | dec option(';') dec           { DSeq $1 $3 }
+    -- ^ TODO: this make 7 r/r conflict
     | infix option(int) list1(vid)   { DInfix $2 $3 }
-    | infixr option(int) list(vid)  { DInfixr $2 $3 }
+    | infixr option(int) list1(vid)  { DInfixr $2 $3 }
     | nonfix list1(vid) { DNonfix $2 }
 
 -- | TODO Recursive
@@ -385,16 +389,17 @@ conbinds :: { [ConBind] }
 conbind :: { ConBind }
         : ope vid option(snd(of, ty)) { CBind $1 $2 $3 }
 
-exbinds :: { [ExBind] }
-        : sep(exbind, and) { $1 }
-
-exbind :: { ExBind }
-       : ope vid option(snd(of, ty)) { ExBind $1 $2 $3 }
+-- TODO: No longer use exception for sake of simplicity of syntax
+-- exbinds :: { [ExBind] }
+--         : sep(exbind, and) { $1 }
+-- 
+-- exbind :: { ExBind }
+--        : ope vid option(snd(of, ty)) { ExBind $1 $2 $3 }
 
 
 {
 makeLong :: ([String] -> String -> a) -> [String] -> a
 makeLong f xs = f (init xs) (last xs)
 
-parseError _ = parseFail "Parse failure"
+parseError p = parseFail ("Parse failure: " ++ (show p))
 }
