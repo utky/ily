@@ -16,6 +16,8 @@ data AtPat
   | PRec [PatRow]
   -- | parens enclosing
   | PPat Pat
+  -- | tuple
+  | PTuple [Pat]
   deriving (Eq, Show)
 
 -- | Pattern rows
@@ -30,11 +32,13 @@ data PatRow
 -- | Patterns
 data Pat
   -- | atomic
-  = PAtPat AtPat
+  -- = PAtPat AtPat
+  -- | flatten deconstruction (intermediate structure)
+  = PFlatApp [AtPat]
   -- | constructed pattern
-  | PCtor Id.Op Id.VId AtPat
+  -- | PCtor Id.Op Id.VId AtPat
   -- | infixed value construction
-  | PInfix Pat Id.VId Pat
+  -- | PInfix Pat Id.VId Pat
   -- | typed
   | PTyped Pat T.Ty
   -- | layered

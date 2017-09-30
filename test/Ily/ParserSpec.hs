@@ -62,136 +62,183 @@ spec = do
 
   describe "pat" $ do
     it "atpat _" $ 
-      shouldParse P.parsePat "_"  (S.PAtPat S.PWildcard)
+      shouldParse P.parsePat "_" 
+        (S.PFlatApp [S.PWildcard])
     it "atpat op vid" $ 
-      shouldParse P.parsePat "op >>" (S.PAtPat (S.PVId S.Op (S.VId ">>")))
+      shouldParse P.parsePat "op >>"
+        (S.PFlatApp [(S.PVId S.Op (S.VId ">>"))])
     it "atpat nop vid" $ 
-      shouldParse P.parsePat "value" (S.PAtPat (S.PVId S.Nop (S.VId "value")))
+      shouldParse P.parsePat "value"
+        (S.PFlatApp [(S.PVId S.Nop (S.VId "value"))])
     it "atpat nop longvid" $ 
-      shouldParse P.parsePat "Str.value" (S.PAtPat (S.PVId S.Nop (S.QVId ["Str"] "value")))
+      shouldParse P.parsePat "Str.value"
+        (S.PFlatApp [(S.PVId S.Nop (S.QVId ["Str"] "value"))])
     it "atpat patrow empty" $ 
       shouldParse P.parsePat "{}"
-        (S.PAtPat
-          (S.PRec
-            []))
+        (S.PFlatApp
+          [(S.PRec
+            [])])
     it "atpat patrow wildcard" $ 
       shouldParse P.parsePat "{...}"
-        (S.PAtPat
-          (S.PRec
-            [S.PRWildcard]))
+        (S.PFlatApp
+          [(S.PRec
+            [S.PRWildcard])])
     it "atpat patrow" $ 
       shouldParse P.parsePat "{ value = 1 }"
-        (S.PAtPat
-          (S.PRec
+        (S.PFlatApp
+          [(S.PRec
             [(S.PRow
               (S.Lab "value")
-              (S.PAtPat (S.PCon (S.SInt 1))))]))
+              (S.PFlatApp [(S.PCon (S.SInt 1))]))])])
     it "atpat patrows" $ 
       shouldParse P.parsePat "{ name = \"name\", age = 20 }"
-        (S.PAtPat
-          (S.PRec
+        (S.PFlatApp
+          [(S.PRec
             [(S.PRow
               (S.Lab "name")
-              (S.PAtPat (S.PCon (S.SStr "name")))),
+              (S.PFlatApp [(S.PCon (S.SStr "name"))])),
              (S.PRow
               (S.Lab "age")
-              (S.PAtPat (S.PCon (S.SInt 20))))]))
+              (S.PFlatApp [(S.PCon (S.SInt 20))]))])])
     it "pat constructed pattern" $ 
-      shouldParse P.parsePat "(Just x)"
-        (S.PCtor S.Nop
-          (S.VId "Just")
-          (S.PVId S.Nop (S.VId "x")))
+      shouldParse P.parsePat "just x"
+        (S.PFlatApp
+          [ (S.PVId S.Nop (S.VId "just"))
+          , (S.PVId S.Nop (S.VId "x"))
+          ])
     it "pat infixed value construction" $ 
       shouldParse P.parsePat "x + y"
-        (S.PInfix
-          (S.PAtPat (S.PVId S.Nop (S.VId "x")))
-          (S.VId "+")
-          (S.PAtPat (S.PVId S.Nop (S.VId "y"))))
+        (S.PFlatApp
+          [ (S.PVId S.Nop (S.VId "x"))
+          , (S.PVId S.Nop (S.VId "+"))
+          , (S.PVId S.Nop (S.VId "y"))
+          ])
+    it "pat tuple" $ 
+      shouldParse P.parsePat "(x, y)"
+        (S.PFlatApp
+          [(S.PTuple
+            [ (S.PFlatApp [(S.PVId S.Nop (S.VId "x"))])
+            , (S.PFlatApp [(S.PVId S.Nop (S.VId "y"))])
+            ])])
+    it "pat paren" $ 
+      shouldParse P.parsePat "(x)"
+        (S.PFlatApp
+          [(S.PPat
+            (S.PFlatApp [(S.PVId S.Nop (S.VId "x"))]))])
     it "pat no var typed" $ 
       shouldParse P.parsePat "x : t"
         (S.PTyped
-          (S.PAtPat (S.PVId S.Nop (S.VId "x")))
+          (S.PFlatApp [(S.PVId S.Nop (S.VId "x"))])
           (S.TyTyCon [] (S.TyCon "t")))
     it "pat var typed" $ 
       shouldParse P.parsePat "x : 'a t"
         (S.PTyped
-          (S.PAtPat (S.PVId S.Nop (S.VId "x")))
+          (S.PFlatApp [(S.PVId S.Nop (S.VId "x"))])
           (S.TyTyCon [(S.TyTyVar (S.TyVar "'a"))] (S.TyCon "t")))
     it "pat func typed" $ 
-      shouldParse P.parsePat "x : s -> t"
+      shouldParse P.parsePat "f : s -> t"
         (S.PTyped
-          (S.PAtPat (S.PVId S.Nop (S.VId "x")))
+          (S.PFlatApp [(S.PVId S.Nop (S.VId "f"))])
           (S.TyFunc
             (S.TyTyCon [] (S.TyCon "s"))
             (S.TyTyCon [] (S.TyCon "t"))))
     it "pat rec typed" $ 
-      shouldParse P.parsePat "x : { f : t }"
+      shouldParse P.parsePat "x : { l : t }"
         (S.PTyped
-          (S.PAtPat (S.PVId S.Nop (S.VId "x")))
+          (S.PFlatApp [(S.PVId S.Nop (S.VId "x"))])
           (S.TyRec
-            [(S.TyRow (S.Lab "f") (S.TyTyCon [] (S.TyCon "t")))]))
+            [(S.TyRow (S.Lab "l") (S.TyTyCon [] (S.TyCon "t")))]))
 
   -- Expression
   describe "exp" $ do
 
     it "exp scons" $ 
       shouldParse P.parseExp "1"
-        (S.EAtExp (S.ESCon (S.SInt 1)))
+        (S.EFlatApp [(S.ESCon (S.SInt 1))])
 
     it "exp vid" $ 
       shouldParse P.parseExp "x"
-        (S.EAtExp (S.EVId S.Nop (S.VId "x")))
+        (S.EFlatApp [(S.EVId S.Nop (S.VId "x"))])
 
     it "exp record" $ 
-      shouldParse P.parseExp "{ x = 1, y = \"why\" }"
-        (S.EAtExp (S.ERec [ (S.ERow
+      shouldParse P.parseExp "{ x = 1, y = \"two\" }"
+        (S.EFlatApp [(S.ERec [ (S.ERow
                               (S.Lab "x")
-                              (S.EAtExp (S.ESCon (S.SInt 1))))
+                              (S.EFlatApp [(S.ESCon (S.SInt 1))]))
                           , (S.ERow
                               (S.Lab "y")
-                              (S.EAtExp (S.ESCon (S.SStr "why"))))
-                          ]))
+                              (S.EFlatApp [(S.ESCon (S.SStr "two"))]))
+                          ])])
 
     it "exp application" $ 
       shouldParse P.parseExp "inc 1"
-        (S.EApp
-          (S.EAtExp (S.EVId S.Nop (S.VId "inc")))
-          (S.ESCon (S.SInt 1)))
+        (S.EFlatApp
+          [ (S.EVId S.Nop (S.VId "inc"))
+          , (S.ESCon (S.SInt 1))
+          ])
 
     it "exp let val in vid" $ 
       shouldParse P.parseExp "let val x = 1 in x end"
-        (S.EAtExp
-          (S.ELet
+        (S.EFlatApp
+          [(S.ELet
             (S.DVal []
               [(S.VBind
-                 (S.PAtPat (S.PVId S.Nop (S.VId "x")))
-                 (S.EAtExp (S.ESCon (S.SInt 1))))])
-            (S.EAtExp
-              (S.EVId S.Nop (S.VId "x")))))
+                 (S.PFlatApp [(S.PVId S.Nop (S.VId "x"))])
+                 (S.EFlatApp [(S.ESCon (S.SInt 1))]))])
+            (S.EFlatApp
+              [(S.EVId S.Nop (S.VId "x"))]))])
 
     it "exp let val in fun app" $ 
       shouldParse P.parseExp "let val x = 1 in f x end"
-        (S.EAtExp
-          (S.ELet
+        (S.EFlatApp
+          [(S.ELet
             (S.DVal []
               [(S.VBind
-                 (S.PAtPat (S.PVId S.Nop (S.VId "x")))
-                 (S.EAtExp (S.ESCon (S.SInt 1))))])
-            (S.EApp
-              (S.EAtExp (S.EVId S.Nop (S.VId "f")))
-              (S.EVId S.Nop (S.VId "x")))))
+                 (S.PFlatApp [(S.PVId S.Nop (S.VId "x"))])
+                 (S.EFlatApp [(S.ESCon (S.SInt 1))]))])
+            (S.EFlatApp
+              [ (S.EVId S.Nop (S.VId "f"))
+              , (S.EVId S.Nop (S.VId "x"))
+              ]))])
+
+    it "exp let val in infix app" $ 
+      shouldParse P.parseExp "let val x = 1 and y = 2 in x + y end"
+        (S.EFlatApp
+          [(S.ELet
+            (S.DVal []
+              [ (S.VBind
+                  (S.PFlatApp [(S.PVId S.Nop (S.VId "x"))])
+                  (S.EFlatApp [(S.ESCon (S.SInt 1))]))
+              , (S.VBind
+                  (S.PFlatApp [(S.PVId S.Nop (S.VId "y"))])
+                  (S.EFlatApp [(S.ESCon (S.SInt 2))]))
+                 ])
+            (S.EFlatApp
+              [ (S.EVId S.Nop (S.VId "x"))
+              , (S.EVId S.Nop (S.VId "+"))
+              , (S.EVId S.Nop (S.VId "y"))
+              ]))])
 
     it "exp infix app" $ 
       shouldParse P.parseExp "1 + 2"
-        (S.EInfixApp
-          (S.EAtExp (S.ESCon (S.SInt 1)))
-          (S.VId "+")
-          (S.EAtExp (S.ESCon (S.SInt 2))))
+        (S.EFlatApp
+          [ (S.ESCon (S.SInt 1))
+          , (S.EVId S.Nop (S.VId "+"))
+          , (S.ESCon (S.SInt 2))
+          ])
+
+    it "exp infix app with symbol" $ 
+      shouldParse P.parseExp "x + y"
+        (S.EFlatApp
+          [ (S.EVId S.Nop (S.VId "x"))
+          , (S.EVId S.Nop (S.VId "+"))
+          , (S.EVId S.Nop (S.VId "y"))
+          ])
 
     it "exp typed" $ 
       shouldParse P.parseExp "1: int"
         (S.ETyped
-          (S.EAtExp (S.ESCon (S.SInt 1)))
+          (S.EFlatApp [(S.ESCon (S.SInt 1))])
           (S.TyTyCon [] (S.TyCon "int")))
 
     -- TODO: handle
@@ -202,11 +249,12 @@ spec = do
         (S.EFn
           (S.MMRule
             [(S.MRule
-               (S.PAtPat (S.PVId S.Nop (S.VId "x")))
-               (S.EInfixApp
-                 (S.EAtExp (S.EVId S.Nop (S.VId "x")))
-                 (S.VId "+")
-                 (S.EAtExp (S.ESCon (S.SInt 1)))))
+               (S.PFlatApp [(S.PVId S.Nop (S.VId "x"))])
+               (S.EFlatApp
+                 [ (S.EVId S.Nop (S.VId "x"))
+                 , (S.EVId S.Nop (S.VId "+"))
+                 , (S.ESCon (S.SInt 1))
+                 ]))
             ]))
 
   -- Declaration
@@ -216,8 +264,8 @@ spec = do
       shouldParse P.parseDec "val i = 1"
         (S.DVal []
           [(S.VBind
-             (S.PAtPat (S.PVId S.Nop (S.VId "i")))
-             (S.EAtExp (S.ESCon (S.SInt 1))))])
+             (S.PFlatApp [(S.PVId S.Nop (S.VId "i"))])
+             (S.EFlatApp [(S.ESCon (S.SInt 1))]))])
 
     it "dec type alias" $ 
       shouldParse P.parseDec "type i = int"
@@ -264,3 +312,16 @@ spec = do
           [ (S.StrId "List")
           , (S.StrId "日本語")
           ])
+
+  -- Module
+--  describe "strdec" $ do
+--
+--    it "strdec" $ 
+--      shouldParse P.parseModule
+--        (unlines [ "structure Bool = struct"
+--                 , "  datatype bool = true | false"
+--                 , "end" ])
+--        (S.DVal []
+--          [(S.VBind
+--             (S.PAtPat (S.PVId S.Nop (S.VId "i")))
+--             (S.EAtExp (S.ESCon (S.SInt 1))))])

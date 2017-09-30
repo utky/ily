@@ -28,11 +28,14 @@ data ExpRow
 -- | Expressions
 data Exp
   -- | atomic
-  = EAtExp AtExp
+  -- = EAtExp AtExp
+  -- | flatten application (intermediate structure)
+  = EFlatApp [AtExp]
   -- | application (L)
   | EApp Exp AtExp
   -- | infixed application
-  | EInfixApp Exp I.VId Exp
+  -- | EInfixApp Exp I.VId Exp
+  | EInfixApp AtExp I.VId AtExp
   -- | typed (L)
   | ETyped Exp T.Ty
   -- | handle exception

@@ -43,3 +43,13 @@ data StrId
   = StrId Id
   | QStrId [Id] Id
   deriving (Eq, Show)
+
+data SigId
+  = SigId Id
+  | QSigId [Id] Id
+  deriving (Eq, Show)
+
+data FunId
+  = FunId Id
+  | QFunId [Id] Id
+  deriving (Eq, Show)

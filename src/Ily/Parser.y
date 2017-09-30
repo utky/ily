@@ -149,23 +149,24 @@ import Ily.Syntax
     tyvarid  { TTyV $$ }
 
 %nonassoc ':'
-%right ','
-%right '->'
-%right '=>'
-%right and
-%left else
-%left raise
-%right handle
-%right orelse
-%right andalso
-%right as
+%right    ','
+%right    '->'
+%right    '=>'
+%right    and
+%left     else
+%left     raise
+%right    handle
+%right    orelse
+%right    andalso
+%right    as
 
 %%
 
 -- Combinators
 
-option(p)  : p  { Just $1 }
-           |    { Nothing }
+option(p)  :    { Nothing }
+           | p  { Just $1 }
+           
 
 fst(p,q)        : p q                 { $1 }
 snd(p,q)        : p q                 { $2 }
@@ -179,9 +180,10 @@ both(p,q)       : p q                 { ($1,$2) }
 -- seq(p)         : seq1(p)            { $1 }
 --                |                    { [] }
 -- 
-rev_sep(p, q)  : rev_sep(p, q) snd(q, p) { $2 : $1 }
+rev_sep(p, q)  :                         { [] }
                | p                       { [$1] }
-               |                         { [] }
+               | rev_sep(p, q) snd(q, p) { $2 : $1 }
+               
 -- 
 -- rev_sep1(p, q)  : rev_sep1(p, q) snd(q, p) { $2 : $1 }
 --                 | p                     { [$1] }
@@ -193,16 +195,17 @@ sep(p, q)      : rev_sep(p, q)          { reverse $1 }
 -- 
 -- andseq(p)      : sep1(p, and)        { $1 }
 
-seq(p)         : '(' sep(p, ',') ')'    { $2 }
+seq(p)         :                        { [] }
                | p                      { [$1] }
-               |                        { [] }
+               | '(' sep(p, ',') ')'    { $2 }
 
+list_(p)       :             { [] }
+               | list_(p) p  { $2 : $1 }
+               
 
-list_(p)       : list_(p) p  { $2 : $1 }
-               |             { [] }
-
-list_1(p)      : list_1(p) p  { $2 : $1 }
-               | p            { [$1] }
+list_1(p)      : p            { [$1] }
+               | list_1(p) p  { $2 : $1 }
+               
 
 list(p)        : list_(p)    { reverse $1 }
 
@@ -254,7 +257,11 @@ atpat :: { AtPat }
       | scon                 { PCon $1 }
       | ope longvid          { PVId $1 $2 }
       | '{' patrows '}' { PRec $2 }
+      | '(' ')'  { PTuple [] }
       | '(' pat ')'          { PPat $2 }
+      | '(' sep(pat, ',') ')'  { PTuple $2 }
+      -- ^ TODO: tuple element must be > 1 
+      --         test
 
 patrows :: { [PatRow] }
         : patrows_ { reverse $1 }
@@ -268,11 +275,23 @@ patrow :: { PatRow }
        :  '...'       { PRWildcard }
        | lab '=' pat  { PRow $1 $3 }
 
+apppat  :: { [AtPat] }
+        : apppat_       { reverse $1 }
+
+apppat_ :: { [AtPat] }
+        : atpat         { [$1] }
+        | apppat_ atpat { $2 : $1 }
+
 pat :: { Pat }
-    : atpat                               { PAtPat $1 }
-    | ope longvid atpat                   { PCtor $1 $2 $3 }
-    | pat vid pat                         { PInfix $1 $2 $3 }
+    : apppat                              { PFlatApp $1 }
+    -- : atpat                               { PAtPat $1 }
+    -- | ope longvid atpat                   { PCtor $1 $2 $3 }
+    -- ^ FIXME: this pattern is prevented by PInfix patten
+    -- parser seems to choose infix pattern for "just x" as 
+    -- "just x SOMETHING"
+    -- | pat vid pat                         { PInfix $1 $2 $3 }
     --TODO: ^ has s/r and r/r conflict
+    -- not neccesary needed -> pending impl
     | pat ':' ty                          { PTyped $1 $3 }
     --| ope vid option(snd(':', ty)) as pat { PLayer $1 $2 $3 $5 }
 
@@ -320,10 +339,21 @@ exprows_ :: { [ExpRow] }
 exprow :: { ExpRow }
        : lab '=' exp { ERow $1 $3 }
 
+appexp  :: { [AtExp] }
+        : appexp_      { reverse $1 }
+
+appexp_ :: { [AtExp] }
+        : atexp        { [$1] }
+        | appexp_ atexp { $2 : $1 }
+
+-- infexp :: { Exp }
+--        -- : infexp vid infexp { EInfixApp $1 $2 $3 }
+--        : atexp vid atexp { EInfixApp $1 $2 $3 }
+--        | appexp { $1 }
+
 exp :: { Exp }
-    : atexp { EAtExp $1 }
-    | exp atexp { EApp $1 $2 }
-    | exp vid exp { EInfixApp $1 $2 $3 }
+    -- : infexp { $1 }
+    : appexp      { EFlatApp $1 }
     | exp ':' ty  { ETyped $1 $3 }
     -- | exp handle match { EHandle $1 $3 }
     -- ^ TODO: not used
@@ -356,7 +386,7 @@ dec :: { Dec }
 --    | exception exbinds             { DExc $2 }
     | local dec in dec end          { DLocal $2 $4 }
     | open list1(longstrid)          { DOpen $2 }
---    | dec option(';') dec           { DSeq $1 $3 }
+    | dec option(';') dec           { DSeq $1 $3 }
     -- ^ TODO: this make 7 r/r conflict
     | infix option(int) list1(vid)   { DInfix $2 $3 }
     | infixr option(int) list1(vid)  { DInfixr $2 $3 }

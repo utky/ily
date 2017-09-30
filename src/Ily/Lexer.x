@@ -46,7 +46,7 @@ $charesc = [abfnrtv\\\"\'\&]
 --- Reserved
 
 @reservedOp = "(" | ")" | "[" | "]" | "{" | "}" | "," | ":" | ";" | "..." 
-            | "_" | "=" | "=>" | "->" | "#"
+            | "_" | "=" | "=>" | "->" | "#" | ":>"
 
 -- Identifies
 
@@ -112,6 +112,16 @@ sml :-
 <0>  "withtype"              { action $ const TWithType }
 <0>  "while"                 { action $ const TWhile }
 <0>  "."                     { action $ const TDot }
+<0>  "eqtype"                { action $ const TEqType }
+<0>  "functor"               { action $ const TFunctor }
+<0>  "include"               { action $ const TInclude }
+<0>  "sharing"               { action $ const TSharing }
+<0>  "sig"                   { action $ const TSig }
+<0>  "signature"             { action $ const TSigunature }
+<0>  "struct"                { action $ const TStruct }
+<0>  "structure"             { action $ const TStructure }
+<0>  "where"                 { action $ const TWhere }
+<0>  ":>"                    { action $ const TSigDep }
 
 <0>  $digit+               { action (TInt . read) }
 
@@ -238,6 +248,26 @@ data Token
   | TLongId [String]
   -- Type variable
   | TTyV String
+  -- eqtype
+  | TEqType
+  -- functor
+  | TFunctor
+  -- include
+  | TInclude
+  -- sharing
+  | TSharing
+  -- sig
+  | TSig
+  -- signature
+  | TSigunature
+  -- struct
+  | TStruct
+  -- structure
+  | TStructure
+  -- where
+  | TWhere
+  -- :>
+  | TSigDep
   -- End of file
   | TEOF
   deriving (Eq,Show)
