@@ -25,6 +25,7 @@ library
                      Ily.Syntax.Pat
                      Ily.Syntax.Type
                      Ily.Syntax.Expr
+                     Ily.Syntax.Module
   build-depends:       base >= 4.7 && < 5
                      , array
                      , text

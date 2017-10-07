@@ -307,11 +307,26 @@ spec = do
           ])
 
     it "dec open two modules" $ 
-      shouldParse P.parseDec "open List 日本語"
+      shouldParse P.parseDec "open List 日本語.モジュール"
         (S.DOpen
           [ (S.StrId "List")
-          , (S.StrId "日本語")
+          , (S.QStrId ["日本語"] "モジュール")
           ])
+
+    it "dec sequencial" $ 
+      shouldParse P.parseDec 
+        (unlines [ "val x = 1"
+                 , "val y = 2"
+                 ])
+        (let x = (S.DVal []
+                   [(S.VBind
+                      (S.PFlatApp [(S.PVId S.Nop (S.VId "x"))])
+                      (S.EFlatApp [(S.ESCon (S.SInt 1))]))])
+             y = (S.DVal []
+                   [(S.VBind
+                      (S.PFlatApp [(S.PVId S.Nop (S.VId "y"))])
+                      (S.EFlatApp [(S.ESCon (S.SInt 2))]))])
+         in (S.DSeq [ x , y ]))
 
   -- Module
 --  describe "strdec" $ do

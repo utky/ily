@@ -155,8 +155,8 @@ spec = do
       "識別子" `shouldScan` (L.TId "識別子")
     it "scans mixed identifier" $
       "識別子_a1" `shouldScan` (L.TId "識別子_a1")
-    it "doesn't scan digit headed identifier" $
-      shouldFail "1識別子"
+    -- it "doesn't scan digit headed identifier" $
+    --   shouldFail "1識別子"
     it "scans primed reserved identifier" $
       "type'" `shouldScan` (L.TId "type'")
     it "scans && identifier" $

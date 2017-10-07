@@ -68,7 +68,7 @@ data Dec
   | DDataType [DatBind]
   -- | datatype replication
   | DDataTypeRep I.TyCon I.TyCon -- ???
-  -- | abstype declaration
+  -- | abstype declaration (this may not be used)
   | DAbsType [DatBind] Dec
   -- | exception declaration
   | DExc [ExBind]
@@ -77,7 +77,7 @@ data Dec
   -- | open declaration (N >= 1)
   | DOpen [I.StrId]
   -- | sequantial declaration
-  | DSeq Dec Dec
+  | DSeq [Dec]
   -- | infix (L) directive
   | DInfix  (Maybe Integer) [I.VId]
   -- | infix (R) directive
