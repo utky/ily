@@ -439,7 +439,6 @@ dec_ :: { Dec }
 --    | exception exbinds             { DExc $2 }
     | local dec in dec end           { DLocal $2 $4 }
     | open list1(longstrid)          { DOpen $2 }
-    | decs                           { DSeq $1 }
     -- ^ TODO: this make 7 r/r conflict
     | infix option(int) list1(vid)   { DInfix $2 $3 }
     | infixr option(int) list1(vid)  { DInfixr $2 $3 }
@@ -498,7 +497,7 @@ strexp :: { StrExp }
        | let strdec in strdec end { StrLet $2 $4 }
 
 strdec :: { StrDec }
-       : dec                    { StrDec $1 }
+       : decs                   { StrDec $1 }
        | structure strbinds     { Structure $2 }
        | local strdec in strdec { StrLocal $2 $4 }
        -- emtpy

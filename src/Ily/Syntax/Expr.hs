@@ -76,8 +76,6 @@ data Dec
   | DLocal Dec Dec
   -- | open declaration (N >= 1)
   | DOpen [I.StrId]
-  -- | sequantial declaration
-  | DSeq [Dec]
   -- | infix (L) directive
   | DInfix  (Maybe Integer) [I.VId]
   -- | infix (R) directive

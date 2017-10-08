@@ -313,10 +313,36 @@ spec = do
           , (S.QStrId ["日本語"] "モジュール")
           ])
 
-    it "dec sequencial" $ 
-      shouldParse P.parseDec 
-        (unlines [ "val x = 1"
-                 , "val y = 2"
+  -- Module
+  describe "strdec" $ do
+
+    it "strdec" $ 
+      shouldParse P.parseTop
+        (unlines [ "structure Bool = struct"
+                 , "  type i = int"
+                 , "end" ])
+        (S.TopStr
+          (S.Structure
+            [(S.StrBind (S.StrId "Bool")
+              (S.StrBasic
+                (S.StrDec
+                  [(S.DType
+                    [ (S.TBind []
+                        (S.TyCon "i") 
+                        (S.TyTyCon [] (S.TyCon "int")))])
+                  ]
+                )
+              )
+            )]
+          )
+        )
+
+    it "strdec dec sequencial" $ 
+      shouldParse P.parseTop
+        (unlines [ "structure Test = struct"
+                 , "  val x = 1"
+                 , "  val y = 2"
+                 , "end"
                  ])
         (let x = (S.DVal []
                    [(S.VBind
@@ -326,17 +352,12 @@ spec = do
                    [(S.VBind
                       (S.PFlatApp [(S.PVId S.Nop (S.VId "y"))])
                       (S.EFlatApp [(S.ESCon (S.SInt 2))]))])
-         in (S.DSeq [ x , y ]))
-
-  -- Module
---  describe "strdec" $ do
---
---    it "strdec" $ 
---      shouldParse P.parseModule
---        (unlines [ "structure Bool = struct"
---                 , "  datatype bool = true | false"
---                 , "end" ])
---        (S.DVal []
---          [(S.VBind
---             (S.PAtPat (S.PVId S.Nop (S.VId "i")))
---             (S.EAtExp (S.ESCon (S.SInt 1))))])
+         in (S.TopStr
+              (S.Structure
+                [(S.StrBind (S.StrId "Test")
+                  (S.StrBasic
+                    (S.StrDec [x, y])
+                  )
+                )]
+              )
+            ))

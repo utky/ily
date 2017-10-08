@@ -24,7 +24,7 @@ data StrExp
 
 data StrDec
   -- | declaration
-  = StrDec E.Dec
+  = StrDec [E.Dec]
   -- | structure
   | Structure [StrBind]
   -- | local
