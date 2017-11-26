@@ -17,6 +17,13 @@ data AtExp
   | ELet Dec Exp
   -- | paren enclosing
   | EParen Exp
+  -- Deriving forms
+  -- Tuple construction literal
+  | ETuple [Exp]
+  -- List construction literal
+  | EList  [Exp]
+  -- Record selector with label
+  | ESelector I.Lab
   deriving (Show, Eq)
 
 -- | Expression rows
@@ -28,9 +35,9 @@ data ExpRow
 -- | Expressions
 data Exp
   -- | atomic
-  -- = EAtExp AtExp
+  = EAtExp AtExp
   -- | flatten application (intermediate structure)
-  = EFlatApp [AtExp]
+  | EFlatApp [AtExp]
   -- | application (L)
   | EApp Exp AtExp
   -- | infixed application
@@ -39,15 +46,26 @@ data Exp
   -- | typed (L)
   | ETyped Exp T.Ty
   -- | handle exception
-  | EHandle Exp Match
+  -- | TODO
+  -- | EHandle Exp Match
   -- | raise exception
-  | ERaise Exp
+  -- | TODO
+  -- | ERaise Exp
   -- | function
   | EFn Match
+  -- Following constructors belong to derived form
+  -- | case of
+  | ECaseOf Exp Match
+  -- | if then else
+  | EIf Exp Exp Exp
+  -- | andalso
+  | EAndAlso Exp Exp
+  -- | orelse
+  | EOrElse Exp Exp
   deriving (Show, Eq)
 
 -- | Matches
-data Match
+newtype Match
   = MMRule [MRule]
   deriving (Show, Eq)
   -- recursive (need optimise)
@@ -82,10 +100,14 @@ data Dec
   | DInfixr (Maybe Integer) [I.VId]
   -- | nonfix directive
   | DNonfix [I.VId]
+  -- Driving form
+  -- | function declaration
+  | DFun [I.TyVar] [FValBind]
   deriving (Show, Eq)
 
 -- | Value bindings
 data ValBind
+  -- | Value bind of reursion, pattern to be bound, expression
   = VBind P.Pat Exp
   deriving (Show, Eq)
 
@@ -113,5 +135,19 @@ data ExBind
   = ExBind I.Op I.VId (Maybe T.Ty)
   deriving (Show, Eq)
 
+-- Deriving function which manipulate AST tree
+-- =============================================
 
+newtype FValBind
+  = FValBind [FClause]
+  deriving (Show, Eq)
 
+data FClause
+  = FClause I.Op I.VId [P.AtPat] (Maybe T.Ty) Exp
+  deriving (Show, Eq)
+
+-- | Derive case-of to anonymous function application
+caseOf :: Exp -> Exp
+caseOf (ECaseOf e m) = EApp (EFn m) (EParen e)
+-- fallback to no derivation
+caseOf exp           = exp

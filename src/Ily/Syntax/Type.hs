@@ -14,6 +14,9 @@ data Ty
   | TyFunc Ty Ty
   -- | paren enclosing
   | TyParen Ty
+  -- Deriving form
+  -- | conjunction of type
+  | TyTuple [Ty]
   deriving (Eq, Show)
 
 -- | Type expression rows

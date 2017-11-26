@@ -30,6 +30,8 @@ import Ily.Syntax
   , DatBind(..)
   , ConBind(..)
   , ExBind(..)
+  , FValBind(..)
+  , FClause(..)
   , StrExp(..)
   , StrDec(..)
   , StrBind(..)
@@ -181,8 +183,10 @@ import Ily.Syntax
     '=>'  { TFatArrow }
       -- # 
     '#'  { TSharp }
-      -- # 
+      -- .
     '.'  { TDot }
+    -- Asterisk for type tuple
+    '*'  { TId "*" }
       -- Identifier 
     id  { TId $$ }
     longid { TLongId $$ }
@@ -204,10 +208,10 @@ import Ily.Syntax
 
 -- Combinators
 
-option(p)  :    { Nothing }
+option(p)  :: { Maybe a }
+           :    { Nothing }
            | p  { Just $1 }
            
-
 fst(p,q)        : p q                 { $1 }
 snd(p,q)        : p q                 { $2 }
 both(p,q)       : p q                 { ($1,$2) }
@@ -331,9 +335,9 @@ apppat_ :: { [AtPat] }
         | apppat_ atpat { $2 : $1 }
 
 pat :: { Pat }
-    : apppat                              { PFlatApp $1 }
-    -- : atpat                               { PAtPat $1 }
-    -- | ope longvid atpat                   { PCtor $1 $2 $3 }
+    --: apppat                              { PFlatApp $1 }
+    : atpat                               { PAtPat $1 }
+    | ope longvid atpat                   { PCtor $1 $2 $3 }
     -- ^ FIXME: this pattern is prevented by PInfix patten
     -- parser seems to choose infix pattern for "just x" as 
     -- "just x SOMETHING"
@@ -349,6 +353,11 @@ ty :: { Ty }
    | ty '->' ty           { TyFunc $1 $3 }
    | tytycon              { $1 }
    | '(' ty ')'           { TyParen $2 }
+   | ty_tuple            { TyTuple $1 }
+
+ty_tuple  :: { [Ty] }
+          : ty '*' ty        { [$1, $3] }
+          | ty '*' ty_tuple { $1 : $3 }
 
 tytycon :: { Ty }
         : longtycon              { TyTyCon [] $1 }
@@ -367,16 +376,22 @@ tyrows_ :: { [TyRow] }
 tyrow :: { TyRow }
       : lab ':' ty { TyRow $1 $3 }
 
+ty_ann :: { Ty }
+       : snd(':', ty) { $1 }
+
 -- ========================================================
 -- | Expression
 -- ========================================================
 atexp :: { AtExp }
-      : scon                 { ESCon $1 }
-      | ope longvid          { EVId $1 $2 }
-      | '{' exprows '}'      { ERec $2 }
-      | let dec in exp end   { ELet $2 $4 }
+      : scon                   { ESCon $1 }
+      | ope longvid            { EVId $1 $2 }
+      | '{' exprows '}'        { ERec $2 }
+      | let dec in exp end     { ELet $2 $4 }
       -- ^ TODO: declaration
-      | '(' exp ')'          { EParen $2 }
+      | '(' exp ')'            { EParen $2 }
+      | '(' sep(exp, ',') ')'  { ETuple $2 }
+      | '[' sep(exp, ',') ']'  { EList $2 }
+      | '#' lab                { ESelector $2 }
 
 exprows :: { [ExpRow] }
        : exprows_ { reverse $1 }
@@ -389,27 +404,33 @@ exprows_ :: { [ExpRow] }
 exprow :: { ExpRow }
        : lab '=' exp { ERow $1 $3 }
 
-appexp  :: { [AtExp] }
-        : appexp_      { reverse $1 }
+appexp :: { Exp }
+        : atexp        { EAtExp $1 }
+        | appexp atexp { EApp $1 $2 }
 
-appexp_ :: { [AtExp] }
-        : atexp        { [$1] }
-        | appexp_ atexp { $2 : $1 }
-
--- infexp :: { Exp }
---        -- : infexp vid infexp { EInfixApp $1 $2 $3 }
---        : atexp vid atexp { EInfixApp $1 $2 $3 }
---        | appexp { $1 }
+infexp :: { Exp }
+       -- : infexp vid infexp { EInfixApp $1 $2 $3 }
+       : appexp { $1 }
+       --| atexp vid atexp { EInfixApp $1 $2 $3 }
 
 exp :: { Exp }
-    -- : infexp { $1 }
-    : appexp      { EFlatApp $1 }
-    | exp ':' ty  { ETyped $1 $3 }
+    : infexp { $1 }
+    --: appexp      { EFlatApp $1 }
+    | exp ty_ann  { ETyped $1 $2 }
     -- | exp handle match { EHandle $1 $3 }
     -- ^ TODO: not used
     -- | raise exp { ERaise $2 }
     -- ^ TODO: not used
     | fn match { EFn $2 }
+    -- Derived form
+    -- | case of
+    | case exp of match { ECaseOf $2 $4 }
+    -- | if then else
+    | if exp then exp else exp { EIf $2 $4 $6 }
+    -- | andalso
+    | exp andalso exp          { EAndAlso $1 $3 }
+    -- | orelse
+    | exp orelse exp           { EOrElse  $1 $3 }
 
 match :: { Match }
       : mrules { MMRule $1 }
@@ -442,7 +463,10 @@ dec_ :: { Dec }
     -- ^ TODO: this make 7 r/r conflict
     | infix option(int) list1(vid)   { DInfix $2 $3 }
     | infixr option(int) list1(vid)  { DInfixr $2 $3 }
-    | nonfix list1(vid) { DNonfix $2 }
+    | nonfix list1(vid)              { DNonfix $2 }
+    -- deriving forms
+    | fun seq(tyvar) fvalbinds       { DFun $2 $3 }
+    | fun fvalbinds                  { DFun [] $2 }
 
 decs :: { [Dec] }
      : decs_ { reverse $1 }
@@ -451,12 +475,21 @@ decs_ :: { [Dec] }
       : dec       { [$1] }
       | decs_ dec { $2 : $1 }
 
+fvalbinds :: { [FValBind] }
+          : sep(fvalbind, and) { $1 }
+
+fvalbind  :: { FValBind }
+          : sep(clause, '|') { FValBind $1 }
+
+clause :: { FClause }
+       : ope vid list1(atpat) option(ty_ann) '=' exp { FClause $1 $2 $3 $4 $6 } 
+
 -- | TODO Recursive
 valbinds :: { [ValBind] }
          : sep(valbind, and) { $1 }
 
 valbind  :: { ValBind }
-         : pat '=' exp  { VBind $1 $3 }
+         : pat '=' exp      { VBind $1 $3 }
 
 typbinds :: { [TypeBind] }
          : sep(typbind, and) { $1 }

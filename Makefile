@@ -1,4 +1,6 @@
-.PHONY: build test hdevstart hdevstop
+.PHONY: all build test hdevstart hdevstop
+
+all: build test
 
 build:
 	stack build
