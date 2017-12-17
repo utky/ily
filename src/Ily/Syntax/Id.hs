@@ -12,13 +12,6 @@ data Op
 
 -- Primitives
 
--- | Identifier qualified with structure id
-data Long a
-  = Long [StrId] a
-  deriving (Eq, Show)
-
--- 
-
 data VId
   = VId Id
   | QVId [Id] Id

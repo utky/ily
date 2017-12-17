@@ -41,7 +41,8 @@ $cntrl   = [$large \@\[\\\]\^\_]
 $charesc = [abfnrtv\\\"\'\&]
 @escape  = \\ ($charesc | @ascii | @decimal | o @octal | x @hexadecimal)
 @gap     = \\ $white+ \\
-@string  = $graphic # [\"\\] | " " | @escape | @gap | $nl
+@string  = $graphic # [\"\\] | " " | @escape | @gap
+@strings = @string | $nl
 
 --- Reserved
 
@@ -132,6 +133,10 @@ sml :-
 <0>  \"                    { begin string }
 <string> @string*          { action TStr }
 <string> \"                { begin 0 }
+
+<0>  \`                    { begin strings }
+<strings> @strings*        { action TStr }
+<strings> \`               { begin 0 }
 
 <0>  @id                   { action TId }
 <0>  @longid               { action (TLongId . split '.')}

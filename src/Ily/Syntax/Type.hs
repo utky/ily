@@ -5,18 +5,22 @@ import qualified Ily.Syntax.Id as Id
 -- | Type expressoins
 data Ty
   -- | type variable
-  = TyTyVar Id.TyVar
+  = TTyVar Id.TyVar
   -- | record type expression
-  | TyRec [TyRow]
+  | TRec [TyRow]
   -- | type construction
-  | TyTyCon [Ty] Id.TyCon
+  -- | TTyCon [Ty] Id.TyCon
+  | TTyCon Ty Id.TyCon
   -- | function type expression (R)
-  | TyFunc Ty Ty
+  | TFunc Ty Ty
   -- | paren enclosing
-  | TyParen Ty
+  | TParen Ty
   -- Deriving form
   -- | conjunction of type
-  | TyTuple [Ty]
+  | TTuple [Ty]
+  -- intermediate tuple
+  | TPair Ty Ty
+  | TSeq [Ty]
   deriving (Eq, Show)
 
 -- | Type expression rows
