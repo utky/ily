@@ -39,14 +39,16 @@ patrows = rows (choice [ pwildcard, patrow ])
 pat :: Parser Pat
 pat = makeExprParser pat' optable
   where
-    optable = [ [ pcons ], [ ptyped ] ]
+    optable = [ [ ptyped ] ]
     ptyped = Postfix $ flip PTyped <$> (L.colon *> T.ty)
-    pcons = InfixR $ (\s x y -> PInfix x (VId [] s) y) <$> L.symbol "::"
+    -- pcons = InfixR $ (\s x y -> PInfix x (VId [] s) y) <$> L.symbol "::"
 
 pat' :: Parser Pat
-pat' = choice [ try pctor
+pat' = choice [ try pinfix
+              , try pctor
               , patpat
               ]
   where
     patpat = PAtPat <$> atpat
+    pinfix = PInfix <$> atpat <*> I.vid <*> atpat
     pctor = PCtor <$> I.ope <*> I.longvid <*> atpat

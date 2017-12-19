@@ -153,9 +153,9 @@ spec = do
     it "pat infixed value construction" $ 
       shouldParse P.pat "x :: xs"
         (S.PInfix
-          (S.PAtPat (S.PVId S.Nop (S.VId [] "x")))
+          (S.PVId S.Nop (S.VId [] "x"))
           (S.VId [] "::")
-          (S.PAtPat (S.PVId S.Nop (S.VId [] "xs")))
+          (S.PVId S.Nop (S.VId [] "xs"))
         )
 
     it "pat paren" $ 

@@ -39,7 +39,7 @@ atexp = choice [ escons
     escons = ESCon <$> C.scon
     evid = EVId <$> I.ope <*> I.longvid
     erec = ERec <$> exprows
-    elet = ELet <$> (L.let' *> decs) <*> (exp <* L.end)
+    elet = ELet <$> (L.let' *> decs) <*> (L.in' *> exp <* L.end)
     etuple = ETuple <$> seqOf exp
     elist = EList <$> between L.lbracket L.rbracket (sepBy exp L.comma)
     eparen = EParen <$> between L.lparen L.rparen exp
@@ -60,8 +60,25 @@ appexp = build <$> some atexp
 exp :: Parser Exp
 exp = makeExprParser exp' optable
   where
-    optable = [ [ eandalso ], [ eorelse ], [ etyped ] ]
-    -- econs = InfixR $ (\s x y -> EInfix x (VId [] s) y) <$> L.symbol "::"
+    optable =
+      [ [ eandalso
+        --, opmul
+        --, opdiv
+        --, oprem
+        ]
+      , [ eorelse
+        --, opadd
+        --, opsub
+        ]
+      , [ etyped ]
+      ]
+    --binary i sym = i $ (\s l r -> EInfixApp (EParen l) (VId [] s) (EParen r) ) <$> sym
+    --opcons = binary InfixR L.doublecolon
+    --opadd = binary InfixR L.plus
+    --opsub = binary InfixR L.minus
+    --opmul = binary InfixR L.asterisk
+    --opdiv = binary InfixR L.slash
+    --oprem = binary InfixR L.percent
     etyped = Postfix $ flip ETyped <$> (L.colon *> T.ty)
     eandalso = InfixR $ EAndAlso <$ L.andalso
     eorelse = InfixR $ EOrElse <$ L.orelse
@@ -73,7 +90,8 @@ exp' = choice [ efn
               , infexp
               ]
   where
-    infexp = appexp
+    infexp = choice [ try infixapp, appexp ]
+    infixapp = EInfixApp <$> atexp <*> I.vid <*> atexp
     efn = EFn <$> (L.fn *> match)
     ecaseof = ECaseOf <$> (L.case' *> exp) <*> (L.of' *> match)
     eifthenelse = EIf <$> (L.if' *> exp) <*> (L.then' *> exp) <*> (L.else' *> exp)

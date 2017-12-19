@@ -239,8 +239,27 @@ where' = symbol "where"
 sigdep :: Parser String
 sigdep = symbol ":>"
 
+-- | Binary operator for expression
+
 doublecolon :: Parser String
 doublecolon = symbol "::"
+
+plus :: Parser String
+plus = symbol "+"
+
+minus :: Parser String
+minus = symbol "-"
+
+asterisk :: Parser String
+asterisk = symbol "*"
+
+slash :: Parser String
+slash = symbol "/"
+
+percent :: Parser String
+percent = symbol "%"
+
+-- | Reserved words
 
 reserve :: Parser String -> Parser String
 reserve p = try $ p >>= check
@@ -298,5 +317,15 @@ reserved = [ "("
            , "withtype"
            , "while"
            , ":>"
-           , "::"
            ]
+
+-- TODO: comparator operator
+--reservedOperator :: [String]
+--reservedOperator = [ "+"
+--                   , "-"
+--                   , "*"
+--                   , "/"
+--                   , "%"
+--                   , "::"
+--                   ]
+

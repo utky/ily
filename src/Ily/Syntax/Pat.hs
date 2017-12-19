@@ -35,12 +35,10 @@ data PatRow
 data Pat
   -- | atomic
   = PAtPat AtPat
-  -- | flatten deconstruction (intermediate structure)
-  | PFlatApp [AtPat]
   -- | constructed pattern
   | PCtor Id.Op Id.VId AtPat
   -- | infixed value construction
-  | PInfix Pat Id.VId Pat
+  | PInfix AtPat Id.VId AtPat
   -- | typed
   | PTyped Pat T.Ty
   -- | layered

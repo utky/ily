@@ -73,7 +73,6 @@ data MRule
   = MRule P.Pat Exp
   deriving (Show, Eq)
 
-
 -- | Declarations
 data Dec
   -- | value declaration

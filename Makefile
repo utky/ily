@@ -1,4 +1,4 @@
-.PHONY: all build test hdevstart hdevstop
+.PHONY: all build test 
 
 all: build test
 
@@ -7,12 +7,3 @@ build:
 
 test:
 	stack test
-
-happy:
-	stack exec happy -- -i src/Ily/Parser.y
-
-hdevstart:
-	hdevtools admin --start-server
-
-hdevstop:
-	hdevtools admin --stop-server
