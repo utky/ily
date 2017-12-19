@@ -41,7 +41,6 @@ pat = makeExprParser pat' optable
   where
     optable = [ [ ptyped ] ]
     ptyped = Postfix $ flip PTyped <$> (L.colon *> T.ty)
-    -- pcons = InfixR $ (\s x y -> PInfix x (VId [] s) y) <$> L.symbol "::"
 
 pat' :: Parser Pat
 pat' = choice [ try pinfix
@@ -50,5 +49,5 @@ pat' = choice [ try pinfix
               ]
   where
     patpat = PAtPat <$> atpat
-    pinfix = PInfix <$> atpat <*> I.vid <*> atpat
+    pinfix = PInfix <$> atpat <*> (VId [] <$> L.operator) <*> atpat
     pctor = PCtor <$> I.ope <*> I.longvid <*> atpat

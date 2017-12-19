@@ -169,6 +169,7 @@ spec = do
         (S.PTyped
           (S.PAtPat (S.PVId S.Nop (S.VId [] "x")))
           (S.TTyCon [] (S.TyCon [] "t")))
+
     it "pat var typed" $ 
       shouldParse P.pat "x : 'a t"
         (S.PTyped
@@ -304,9 +305,9 @@ spec = do
         )
 
     it "exp infix app" $ 
-      shouldParse P.exp "1 + 2"
+      shouldParse P.exp "x + 2"
         (S.EInfixApp
-          (S.ESCon (S.SInt 1))
+          (S.EVId S.Nop (S.VId [] "x"))
           (S.VId [] "+")
           (S.ESCon (S.SInt 2))
         )

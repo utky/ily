@@ -91,7 +91,7 @@ exp' = choice [ efn
               ]
   where
     infexp = choice [ try infixapp, appexp ]
-    infixapp = EInfixApp <$> atexp <*> I.vid <*> atexp
+    infixapp = EInfixApp <$> atexp <*> (VId [] <$> L.operator) <*> atexp
     efn = EFn <$> (L.fn *> match)
     ecaseof = ECaseOf <$> (L.case' *> exp) <*> (L.of' *> match)
     eifthenelse = EIf <$> (L.if' *> exp) <*> (L.then' *> exp) <*> (L.else' *> exp)
