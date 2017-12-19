@@ -21,13 +21,13 @@ ope = maybeOp <$> optional L.op
     maybeOp Nothing  = Nop
 
 vid :: Parser VId
-vid = VId <$> (L.identifier <|> L.operator)
+vid = VId [] <$> (L.identifier <|> L.operator)
 
 tyvar :: Parser TyVar
 tyvar = TyVar <$> L.tyvarid
 
 tycon :: Parser TyCon
-tycon = TyCon <$> (L.identifier <|> L.operator)
+tycon = TyCon [] <$> (L.identifier <|> L.operator)
 
 lab :: Parser Lab
 lab = Lab <$> L.identifier
@@ -38,8 +38,8 @@ longid f = do
   return $ f q i
 
 longvid :: Parser VId
-longvid = longid QVId <|> vid
+longvid = longid VId <|> vid
 
 longtycon :: Parser TyCon
-longtycon = longid QTyCon <|> tycon
+longtycon = longid TyCon <|> tycon
 

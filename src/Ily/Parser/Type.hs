@@ -6,27 +6,36 @@ import           Text.Megaparsec.Expr
 import qualified Ily.Parser.Lexer as L
 import qualified Ily.Parser.Id as I
 import           Ily.Parser.Row (rows)
-import           Ily.Parser.Seq (seqOf)
 import           Ily.Syntax.Id (TyVar(..), TyCon(..))
 import           Ily.Syntax.Type (Ty(..), TyRow(..))
 
 ty :: Parser Ty
-ty = makeExprParser ty' optable
+ty = makeExprParser atty optable
   where
     tfunc = InfixR $ TFunc <$ L.arrow
-    ttuple = InfixR $ TPair <$ L.symbol "*"
-    tcon = Postfix $ flip TTyCon <$ I.longtycon
-    optable =   [ [tcon], [tfunc] , [ttuple] ] 
+    ttuple = InfixR $ merge <$ L.symbol "*"
+    ttycon = Postfix $ (\c t -> TTyCon [t] c) <$> I.longtycon
+    optable =   [ [tfunc] , [ttuple], [ttycon] ] 
+    merge :: Ty -> Ty -> Ty
+    merge t (TTuple ts) = TTuple $ t:ts
+    merge t u           = TTuple [t, u]
 
-ty' :: Parser Ty
-ty' = choice [ tyvar, trec , tyseq, tycon, vartycon, tparen ]
+
+tyseq :: Parser [Ty]
+tyseq = between L.lparen L.rparen tyseq'
+  where
+    tyseq' = (:) <$> ty <*> (L.comma *> sepBy1 ty L.comma)
+
+tyseqtycon :: Parser Ty
+tyseqtycon = TTyCon <$> tyseq <*> I.longtycon
+
+atty :: Parser Ty
+atty = choice [ tyvar, tycon, trec, try tyseqtycon, tparen ]
   where
     tyvar = TTyVar <$> I.tyvar
-    trec = TRec <$> tyrows
     tycon = TTyCon [] <$> I.longtycon
-    tyseq = TSeq <$> between L.lparen L.rparen (sepBy1 ty L.comma)
-    --vartycon = TTyCon <$> seqOf ty <*> I.longtycon
-    tparen = between L.lparen L.rparen ty
+    trec = TRec <$> tyrows
+    tparen = TParen <$> between L.lparen L.rparen ty
 
 tyrows :: Parser [TyRow]
 tyrows = rows tyrow

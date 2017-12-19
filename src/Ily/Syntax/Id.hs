@@ -13,8 +13,7 @@ data Op
 -- Primitives
 
 data VId
-  = VId Id
-  | QVId [Id] Id
+  = VId [Id] Id
   deriving (Eq, Show)
 
 newtype TyVar
@@ -22,8 +21,7 @@ newtype TyVar
   deriving (Eq, Show)
 
 data TyCon
-  = TyCon Id
-  | QTyCon [Id] Id
+  = TyCon [Id] Id
   deriving (Eq, Show)
 
 -- | The class Lab is extended to include the numeric labels 1 2 3 ···,
@@ -33,16 +31,13 @@ newtype Lab
   deriving (Eq, Show)
 
 data StrId
-  = StrId Id
-  | QStrId [Id] Id
+  = StrId [Id] Id
   deriving (Eq, Show)
 
 data SigId
-  = SigId Id
-  | QSigId [Id] Id
+  = SigId [Id] Id
   deriving (Eq, Show)
 
 data FunId
-  = FunId Id
-  | QFunId [Id] Id
+  = FunId [Id] Id
   deriving (Eq, Show)

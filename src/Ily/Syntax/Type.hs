@@ -10,7 +10,7 @@ data Ty
   | TRec [TyRow]
   -- | type construction
   -- | TTyCon [Ty] Id.TyCon
-  | TTyCon Ty Id.TyCon
+  | TTyCon [Ty] Id.TyCon
   -- | function type expression (R)
   | TFunc Ty Ty
   -- | paren enclosing
@@ -18,9 +18,6 @@ data Ty
   -- Deriving form
   -- | conjunction of type
   | TTuple [Ty]
-  -- intermediate tuple
-  | TPair Ty Ty
-  | TSeq [Ty]
   deriving (Eq, Show)
 
 -- | Type expression rows
