@@ -5,8 +5,6 @@ import           Text.Megaparsec.String (Parser)
 import qualified Ily.Parser.Lexer as L
 
 seqOf :: Parser a -> Parser [a]
---seqOf p = option [] (try singleton <|> seq')
-seqOf p = seq'
+seqOf p = between L.lparen L.rparen moreThanOne
   where
-    singleton = fmap (: []) p
-    seq' = between L.lparen L.rparen (sepBy1 p L.comma)
+    moreThanOne = (:) <$> (p <* L.comma) <*> sepBy1 p L.comma

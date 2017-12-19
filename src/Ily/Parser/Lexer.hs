@@ -46,10 +46,10 @@ idchar :: Parser Char
 idchar = choice [letter, digit, char '_', char '\'']
 
 identifier :: Parser String
-identifier = lexeme $ (:) <$> letter <*> many idchar
+identifier = lexeme . reserve $ (:) <$> letter <*> many idchar
 
 operator :: Parser String
-operator = lexeme $  some $ oneOf "!%&$#+-/:<=>?@~'^|*"
+operator = lexeme . reserve $  some $ oneOf "!%&$#+-/:<=>?@~'^|*"
 
 tyvarid :: Parser String
 tyvarid = lexeme $ (:) <$> char '\'' <*> identifier
@@ -239,12 +239,64 @@ where' = symbol "where"
 sigdep :: Parser String
 sigdep = symbol ":>"
 
+doublecolon :: Parser String
+doublecolon = symbol "::"
 
---  | TDot
---  -- Identifier
---  | TId String
---  -- Long Identifier
---  | TLongId [String]
---  -- Type variable
---  | TTyV String
+reserve :: Parser String -> Parser String
+reserve p = try $ p >>= check
+  where
+    check s = if s `elem` reserved
+                then fail $ "keyword " ++ show s ++ " cannot be an identifier" 
+                else return s
 
+reserved :: [String]
+reserved = [ "("
+           , ")"
+           , "["
+           , "]"
+           , "{"
+           , "}"
+           , ")"
+           , ":"
+           , ";"
+           , "..."
+           , "_"
+           , "|"
+           , "="
+           , "->"
+           , "=>"
+           , "abstype"
+           , "and"
+           , "andalso"
+           , "as"
+           , "case"
+           , "datatype"
+           , "do"
+           , "else"
+           , "end"
+           , "exception"
+           , "fn"
+           , "fun"
+           , "handle"
+           , "if"
+           , "in"
+           , "infix"
+           , "infixr"
+           , "let"
+           , "local"
+           , "nonfix"
+           , "of"
+           , "op"
+           , "open"
+           , "orelse"
+           , "raise"
+           , "rec"
+           , "then"
+           , "type"
+           , "val"
+           , "with"
+           , "withtype"
+           , "while"
+           , ":>"
+           , "::"
+           ]

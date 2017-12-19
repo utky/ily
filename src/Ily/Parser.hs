@@ -5,6 +5,7 @@ module Ily.Parser
   , module Ily.Parser.Const
   , module Ily.Parser.Id
   , module Ily.Parser.Type
+  , module Ily.Parser.Pat
   ) where
 
 import           Text.Megaparsec (runParser)
@@ -13,3 +14,4 @@ import           Ily.Parser.Lexer
 import           Ily.Parser.Const
 import           Ily.Parser.Id
 import           Ily.Parser.Type
+import           Ily.Parser.Pat

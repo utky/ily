@@ -12,10 +12,10 @@ import           Ily.Syntax.Type (Ty(..), TyRow(..))
 ty :: Parser Ty
 ty = makeExprParser atty optable
   where
+    optable =   [ [tfunc] , [ttuple], [ttycon] ] 
     tfunc = InfixR $ TFunc <$ L.arrow
     ttuple = InfixR $ merge <$ L.symbol "*"
     ttycon = Postfix $ (\c t -> TTyCon [t] c) <$> I.longtycon
-    optable =   [ [tfunc] , [ttuple], [ttycon] ] 
     merge :: Ty -> Ty -> Ty
     merge t (TTuple ts) = TTuple $ t:ts
     merge t u           = TTuple [t, u]

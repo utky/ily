@@ -15,7 +15,7 @@ data AtPat
   -- | record
   | PRec [PatRow]
   -- | parens enclosing
-  | PPat Pat
+  | PParen Pat
   -- | tuple
   | PTuple [Pat]
   deriving (Eq, Show)

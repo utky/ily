@@ -93,33 +93,33 @@ spec = do
 
   describe "pat" $ do
     it "atpat _" $ 
-      shouldParse P.parsePat "_" 
+      shouldParse P.pat "_" 
         (S.PAtPat S.PWildcard)
     it "atpat op vid" $ 
-      shouldParse P.parsePat "op >>"
-        (S.PAtPat (S.PVId S.Op (S.VId ">>")))
+      shouldParse P.pat "op >>"
+        (S.PAtPat (S.PVId S.Op (S.VId [] ">>")))
     it "atpat nop vid" $ 
-      shouldParse P.parsePat "value"
-        (S.PAtPat (S.PVId S.Nop (S.VId "value")))
+      shouldParse P.pat "value"
+        (S.PAtPat (S.PVId S.Nop (S.VId [] "value")))
     it "atpat nop longvid" $ 
-      shouldParse P.parsePat "Str.value"
-        (S.PAtPat (S.PVId S.Nop (S.QVId ["Str"] "value")))
+      shouldParse P.pat "Str.value"
+        (S.PAtPat (S.PVId S.Nop (S.VId ["Str"] "value")))
     it "atpat patrow empty" $ 
-      shouldParse P.parsePat "{}"
+      shouldParse P.pat "{}"
         (S.PAtPat (S.PRec []))
     it "atpat patrow wildcard" $ 
-      shouldParse P.parsePat "{...}"
+      shouldParse P.pat "{...}"
         (S.PAtPat
           (S.PRec [S.PRWildcard]))
     it "atpat patrow" $ 
-      shouldParse P.parsePat "{ value = 1 }"
+      shouldParse P.pat "{ value = 1 }"
         (S.PAtPat
           (S.PRec
             [S.PRow
               (S.Lab "value")
               (S.PAtPat (S.PCon (S.SInt 1)))]))
     it "atpat patrows" $ 
-      shouldParse P.parsePat "{ name = \"name\", age = 20 }"
+      shouldParse P.pat "{ name = \"name\", age = 20 }"
         (S.PAtPat
           (S.PRec
             [S.PRow
@@ -129,60 +129,59 @@ spec = do
               (S.Lab "age")
               (S.PAtPat (S.PCon (S.SInt 20)))]))
 
-    -- TODO
     it "pat tuple" $ 
-      shouldParse P.parsePat "(x, y)"
+      shouldParse P.pat "(x, y)"
         (S.PAtPat
           (S.PTuple
-            [ S.PAtPat (S.PVId S.Nop (S.VId "x"))
-            , S.PAtPat (S.PVId S.Nop (S.VId "y"))
+            [ S.PAtPat (S.PVId S.Nop (S.VId [] "x"))
+            , S.PAtPat (S.PVId S.Nop (S.VId [] "y"))
             ]
           ))
 
     it "pat constructed pattern" $ 
-      shouldParse P.parsePat "just x"
+      shouldParse P.pat "just x"
         (S.PCtor
           S.Nop
-          (S.VId "just")
-          (S.PVId S.Nop (S.VId "x"))
+          (S.VId [] "just")
+          (S.PVId S.Nop (S.VId [] "x"))
         )
     it "pat infixed value construction" $ 
-      shouldParse P.parsePat "x + y"
+      shouldParse P.pat "x :: xs"
         (S.PInfix
-          (S.PAtPat (S.PVId S.Nop (S.VId "x")))
-          (S.VId "+")
-          (S.PAtPat (S.PVId S.Nop (S.VId "y")))
+          (S.PAtPat (S.PVId S.Nop (S.VId [] "x")))
+          (S.VId [] "::")
+          (S.PAtPat (S.PVId S.Nop (S.VId [] "xs")))
         )
 
     it "pat paren" $ 
-      shouldParse P.parsePat "(x)"
+      shouldParse P.pat "(x)"
         (S.PAtPat
-          (S.PPat
-            (S.PAtPat (S.PVId S.Nop (S.VId "x")))))
+          (S.PParen
+            (S.PAtPat (S.PVId S.Nop (S.VId [] "x")))))
 
     it "pat no var typed" $ 
-      shouldParse P.parsePat "x : t"
+      shouldParse P.pat "x : t"
         (S.PTyped
-          (S.PAtPat (S.PVId S.Nop (S.VId "x")))
-          (S.TyTyCon [] (S.TyCon "t")))
+          (S.PAtPat (S.PVId S.Nop (S.VId [] "x")))
+          (S.TTyCon [] (S.TyCon [] "t")))
     it "pat var typed" $ 
-      shouldParse P.parsePat "x : 'a t"
+      shouldParse P.pat "x : 'a t"
         (S.PTyped
-          (S.PAtPat (S.PVId S.Nop (S.VId "x")))
-          (S.TyTyCon  [S.TyTyVar (S.TyVar "'a")] (S.TyCon "t")))
+          (S.PAtPat (S.PVId S.Nop (S.VId [] "x")))
+          (S.TTyCon  [S.TTyVar (S.TyVar "'a")] (S.TyCon [] "t")))
     it "pat func typed" $ 
-      shouldParse P.parsePat "f : s -> t"
+      shouldParse P.pat "f : s -> t"
         (S.PTyped
-          (S.PAtPat (S.PVId S.Nop (S.VId "f")))
-          (S.TyFunc
-            (S.TyTyCon [] (S.TyCon "s"))
-            (S.TyTyCon [] (S.TyCon "t"))))
+          (S.PAtPat (S.PVId S.Nop (S.VId [] "f")))
+          (S.TFunc
+            (S.TTyCon [] (S.TyCon [] "s"))
+            (S.TTyCon [] (S.TyCon [] "t"))))
     it "pat rec typed" $ 
-      shouldParse P.parsePat "x : { l : t }"
+      shouldParse P.pat "x : { l : t }"
         (S.PTyped
-          (S.PAtPat (S.PVId S.Nop (S.VId "x")))
-          (S.TyRec
-            [S.TyRow (S.Lab "l") (S.TyTyCon [] (S.TyCon "t"))]))
+          (S.PAtPat (S.PVId S.Nop (S.VId [] "x")))
+          (S.TRec
+            [S.TyRow (S.Lab "l") (S.TTyCon [] (S.TyCon [] "t"))]))
 
 --  -- Expression
 --  describe "exp" $ do
