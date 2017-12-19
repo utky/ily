@@ -119,6 +119,3 @@ data TopDec
   | TopFun FunDec
   deriving (Show, Eq)
 
-data Program = Program [TopDec]
-  deriving (Show, Eq)
-

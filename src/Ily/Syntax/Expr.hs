@@ -89,8 +89,6 @@ data Dec
   | DExc [ExBind]
   -- | local declaration
   | DLocal Dec Dec
-  -- | open declaration (N >= 1)
-  | DOpen [I.StrId]
   -- | infix (L) directive
   | DInfix  (Maybe Integer) [I.VId]
   -- | infix (R) directive

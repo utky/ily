@@ -384,18 +384,6 @@ spec = do
                   Nothing
               ]])
 
-    it "dec open one modules" $ 
-      shouldParse P.dec "open 日本語"
-        (S.DOpen
-          [ S.StrId [] "日本語"
-          ])
-
-    it "dec open two modules" $ 
-      shouldParse P.dec "open List 日本語.モジュール"
-        (S.DOpen
-          [ S.StrId [] "List"
-          , S.StrId ["日本語"] "モジュール"
-          ])
 
     it "decs two val declarations" $ 
       shouldParse P.decs
@@ -485,3 +473,35 @@ spec = do
 --                ]
 --              )
 --            )
+
+-- Program
+
+  describe "describe" $ do
+    it "program open one modules" $ 
+      shouldParse P.program "open 日本語"
+        (S.Program
+          [S.Open [S.StrId [] "日本語"]
+          ]
+          [])
+
+    it "program open two modules" $ 
+      shouldParse P.program "open List 日本語.モジュール"
+        (S.Program
+          [S.Open [ S.StrId [] "List"
+                  , S.StrId ["日本語"] "モジュール"
+                  ]
+          ]
+          [])
+
+    it "program open with val" $ 
+      shouldParse P.program
+        (unlines [ "open List"
+                 , "val x = 1"
+                 ])
+        (S.Program
+          [S.Open [ S.StrId [] "List" ] ]
+          [S.DVal []
+            [S.VBind
+               (S.PAtPat (S.PVId S.Nop (S.VId [] "x")))
+               (S.EAtExp (S.ESCon (S.SInt 1)))]
+          ])

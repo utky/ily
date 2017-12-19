@@ -5,6 +5,7 @@ module Ily.Syntax
   , module Ily.Syntax.Type
   , module Ily.Syntax.Expr
   , module Ily.Syntax.Module
+  , module Ily.Syntax.Program
   ) where
 
 
@@ -14,3 +15,4 @@ import Ily.Syntax.Pat
 import Ily.Syntax.Type
 import Ily.Syntax.Expr
 import Ily.Syntax.Module
+import Ily.Syntax.Program

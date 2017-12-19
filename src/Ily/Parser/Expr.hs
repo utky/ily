@@ -62,23 +62,11 @@ exp = makeExprParser exp' optable
   where
     optable =
       [ [ eandalso
-        --, opmul
-        --, opdiv
-        --, oprem
         ]
       , [ eorelse
-        --, opadd
-        --, opsub
         ]
       , [ etyped ]
       ]
-    --binary i sym = i $ (\s l r -> EInfixApp (EParen l) (VId [] s) (EParen r) ) <$> sym
-    --opcons = binary InfixR L.doublecolon
-    --opadd = binary InfixR L.plus
-    --opsub = binary InfixR L.minus
-    --opmul = binary InfixR L.asterisk
-    --opdiv = binary InfixR L.slash
-    --oprem = binary InfixR L.percent
     etyped = Postfix $ flip ETyped <$> (L.colon *> T.ty)
     eandalso = InfixR $ EAndAlso <$ L.andalso
     eorelse = InfixR $ EOrElse <$ L.orelse
@@ -111,13 +99,11 @@ dec :: Parser Dec
 dec = choice [ dval
              , dtype
              , ddatatype
-             , dopen
              ] <* optional L.semicolon
   where
     dval  = DVal <$> (L.val *> tyvarseq) <*> valbinds
     dtype = DType <$> (L.type' *> typebinds)
     ddatatype = DDataType <$> (L.datatype *> datbinds)
-    dopen = DOpen <$> (L.open *> some I.longstrid)
 
 tyvarseq :: Parser [TyVar]
 tyvarseq = choice [ single, seq, none ]

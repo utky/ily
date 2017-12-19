@@ -7,6 +7,7 @@ module Ily.Parser
   , module Ily.Parser.Type
   , module Ily.Parser.Pat
   , module Ily.Parser.Expr
+  , module Ily.Parser.Program
   ) where
 
 import           Text.Megaparsec (runParser, parseTest)
@@ -17,3 +18,4 @@ import           Ily.Parser.Id
 import           Ily.Parser.Type
 import           Ily.Parser.Pat
 import           Ily.Parser.Expr
+import           Ily.Parser.Program

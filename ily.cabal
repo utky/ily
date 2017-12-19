@@ -26,12 +26,14 @@ library
                      Ily.Syntax.Type
                      Ily.Syntax.Expr
                      Ily.Syntax.Module
+                     Ily.Syntax.Program
                      Ily.Parser.Lexer
                      Ily.Parser.Const
                      Ily.Parser.Id
                      Ily.Parser.Type
                      Ily.Parser.Pat
                      Ily.Parser.Expr
+                     Ily.Parser.Program
                      Ily.Parser.Row
                      Ily.Parser.Seq
   build-depends:       base >= 4.7 && < 5
