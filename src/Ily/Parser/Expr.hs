@@ -23,7 +23,9 @@ import           Ily.Syntax.Expr
                    , ValRec(..)
                    , TypeBind(..)
                    , DatBind(..)
-                   , ConBind(..))
+                   , ConBind(..)
+                   , FValBind(..)
+                   , FClause(..))
 
 atexp :: Parser AtExp
 atexp = choice [ escons
@@ -99,11 +101,13 @@ dec :: Parser Dec
 dec = choice [ dval
              , dtype
              , ddatatype
+             , dfun
              ] <* optional L.semicolon
   where
     dval  = DVal <$> (L.val *> tyvarseq) <*> valbinds
     dtype = DType <$> (L.type' *> typebinds)
     ddatatype = DDataType <$> (L.datatype *> datbinds)
+    dfun = DFun <$> (L.fun *> tyvarseq) <*> fvalbinds
 
 tyvarseq :: Parser [TyVar]
 tyvarseq = choice [ single, seq, none ]
@@ -135,3 +139,17 @@ conbinds = sepBy1 conbind L.bar
 
 conbind :: Parser ConBind
 conbind = CBind <$> I.ope <*> I.vid <*> optional (L.of' *> T.ty)
+
+fvalbinds :: Parser [FValBind]
+fvalbinds = sepBy1 fvalbind L.and
+
+fvalbind :: Parser FValBind
+fvalbind = FValBind <$> sepBy1 fclause L.bar
+
+fclause :: Parser FClause
+fclause = FClause 
+            <$> I.ope
+            <*> I.vid 
+            <*> some P.atpat
+            <*> optional (L.colon *> T.ty)
+            <*> (L.eq *> exp)

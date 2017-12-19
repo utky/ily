@@ -400,30 +400,33 @@ spec = do
              (S.PAtPat (S.PVId S.Nop (S.VId [] "j")))
              (S.EAtExp (S.ESCon (S.SInt 2)))]
         ]
-    -- TODO
---    it "dec function" $ 
---      shouldParse P.dec
---        (unlines [ "fun not true  = false"
---                 , "  | not false = true"
---                 ])
---        (S.DVal
---          []
---          [ S.VBind
---              (S.PAtPat (S.PVId S.Nop (S.VId [] "not")))
---              (S.EFn
---                (S.MMRule
---                  [S.MRule
---                     (S.PFlatApp [S.PVId S.Nop (S.VId [] "true")])
---                     (S.EAtExp
---                       [ S.EVId S.Nop (S.VId "false")
---                       ])
---                  ,S.MRule
---                     (S.PFlatApp [S.PVId S.Nop (S.VId "false")])
---                     (S.EFlatApp
---                       [ S.EVId S.Nop (S.VId "true")
---                       ])
---                  ]))
---          ])
+
+    it "dec function" $ 
+      shouldParse P.dec
+        (unlines [ "fun not true  = false"
+                 , "  | not false = true"
+                 ])
+        (S.DFun
+          []
+          [S.FValBind
+            [S.FClause
+              S.Nop
+              (S.VId [] "not")
+              [S.PVId S.Nop (S.VId [] "true")]
+              Nothing
+              (S.EAtExp
+                ( S.EVId S.Nop (S.VId [] "false")))
+            ,S.FClause
+              S.Nop
+              (S.VId [] "not")
+              [S.PVId S.Nop (S.VId [] "false")]
+              Nothing
+              (S.EAtExp
+                ( S.EVId S.Nop (S.VId [] "true"))
+              )
+            ]
+          ]
+        )
 
   -- Module
 --  describe "strdec" $ do

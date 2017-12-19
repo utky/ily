@@ -1,4 +1,4 @@
-module Ily.Parser.Pat (pat) where
+module Ily.Parser.Pat (pat, atpat) where
 
 import           Text.Megaparsec
 import           Text.Megaparsec.String (Parser)
