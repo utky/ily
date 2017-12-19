@@ -27,13 +27,13 @@ hexadecimal :: Parser Integer
 hexadecimal = lexeme L.hexadecimal
 
 string :: Parser String
-string = char '"' >> manyTill L.charLiteral (char '"')
+string = lexeme $ char '"' >> manyTill L.charLiteral (char '"')
 
 strings :: Parser String
-strings = char '`' >> manyTill L.charLiteral (char '`')
+strings = lexeme $ char '`' >> manyTill L.charLiteral (char '`')
 
 character :: Parser Char
-character = char '#' >> between (char '"') (char '"') anyChar
+character = lexeme $ char '#' >> between (char '"') (char '"') anyChar
 
 letter :: Parser Char
 letter = letterChar

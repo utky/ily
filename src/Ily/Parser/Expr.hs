@@ -90,11 +90,11 @@ decs :: Parser [Dec]
 decs = (:) <$> dec <*> option [] decs
 
 dec :: Parser Dec
-dec = L.lexeme $ choice [ dval
-                        , dtype
-                        , ddatatype
-                        , dopen
-                        ] <* optional L.semicolon
+dec = choice [ dval
+             , dtype
+             , ddatatype
+             , dopen
+             ] <* optional L.semicolon
   where
     dval  = DVal <$> (L.val *> tyvarseq) <*> valbinds
     dtype = DType <$> (L.type' *> typebinds)
