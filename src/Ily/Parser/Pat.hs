@@ -18,7 +18,8 @@ atpat = choice [ pwildcard
                , pvid
                , prec
                , try ptuple -- do not consume if fails for later paren
-               , pparen
+               , try pparen
+               , punit
                ] 
   where
     pwildcard = PWildcard <$ L.underscore
@@ -27,6 +28,7 @@ atpat = choice [ pwildcard
     prec = PRec <$> patrows
     ptuple = PTuple <$> seqOf pat
     pparen = PParen <$> between L.lparen L.rparen pat
+    punit  = PUnit <$ L.lparen <* L.rparen
 
 patrows :: Parser [PatRow]
 patrows = rows (choice [ pwildcard, patrow ])

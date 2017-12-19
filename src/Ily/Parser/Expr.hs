@@ -87,14 +87,14 @@ mrule = MRule <$> P.pat <*> (L.fatArrow *> exp)
 -- Decl
 
 decs :: Parser [Dec]
-decs = (:) <$> dec <*> (optional L.semicolon *> option [] decs)
+decs = (:) <$> dec <*> option [] decs
 
 dec :: Parser Dec
-dec = choice [ dval
-             , dtype
-             , ddatatype
-             , dopen
-             ]
+dec = L.lexeme $ choice [ dval
+                        , dtype
+                        , ddatatype
+                        , dopen
+                        ] <* optional L.semicolon
   where
     dval  = DVal <$> (L.val *> tyvarseq) <*> valbinds
     dtype = DType <$> (L.type' *> typebinds)

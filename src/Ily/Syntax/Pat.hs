@@ -18,6 +18,8 @@ data AtPat
   | PParen Pat
   -- | tuple
   | PTuple [Pat]
+  -- | unit
+  | PUnit
   deriving (Eq, Show)
 
 -- | Pattern rows

@@ -138,6 +138,11 @@ spec = do
             ]
           ))
 
+    it "pat unit" $ 
+      shouldParse P.pat "()"
+        (S.PAtPat
+          S.PUnit)
+
     it "pat constructed pattern" $ 
       shouldParse P.pat "just x"
         (S.PCtor
@@ -391,6 +396,21 @@ spec = do
           , S.StrId ["日本語"] "モジュール"
           ])
 
+    it "decs two val declarations" $ 
+      shouldParse P.decs
+        (unlines [ "val i = `something\nサムシング`"
+                 , ""
+                 , "val j = 2"
+                 ])
+        [S.DVal  []
+          [S.VBind
+             (S.PAtPat (S.PVId S.Nop (S.VId [] "i")))
+             (S.EAtExp (S.ESCon (S.SStr "something\nサムシング")))]
+        ,S.DVal  []
+          [S.VBind
+             (S.PAtPat (S.PVId S.Nop (S.VId [] "j")))
+             (S.EAtExp (S.ESCon (S.SInt 2)))]
+        ]
     -- TODO
 --    it "dec function" $ 
 --      shouldParse P.dec

@@ -6,5 +6,4 @@ import GHC.IO.Encoding (setLocaleEncoding, utf8)
 main :: IO ()
 main = do
     setLocaleEncoding utf8
-    --getContents >>= P.parseTest P.decs
-    getContents >>= print
+    getContents >>= P.parseTest P.decs
