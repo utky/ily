@@ -32,6 +32,9 @@ tycon = TyCon [] <$> (L.identifier <|> L.operator)
 lab :: Parser Lab
 lab = Lab <$> L.identifier
 
+strid :: Parser StrId
+strid = StrId [] <$> L.identifier
+
 longid :: ([Id] -> Id -> a) -> Parser a
 longid f = do
   (q, i) <- L.qualifiedid
@@ -43,3 +46,5 @@ longvid = longid VId <|> vid
 longtycon :: Parser TyCon
 longtycon = longid TyCon <|> tycon
 
+longstrid :: Parser StrId
+longstrid = longid StrId <|> strid

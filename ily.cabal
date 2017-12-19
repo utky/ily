@@ -31,6 +31,7 @@ library
                      Ily.Parser.Id
                      Ily.Parser.Type
                      Ily.Parser.Pat
+                     Ily.Parser.Expr
                      Ily.Parser.Row
                      Ily.Parser.Seq
   build-depends:       base >= 4.7 && < 5

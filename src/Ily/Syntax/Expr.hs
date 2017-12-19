@@ -1,5 +1,6 @@
 module Ily.Syntax.Expr where
 
+import           Prelude hiding (exp)
 import qualified Ily.Syntax.Const as C
 import qualified Ily.Syntax.Id as I
 import qualified Ily.Syntax.Pat as P
@@ -14,7 +15,7 @@ data AtExp
   -- | record
   | ERec [ExpRow]
   -- | local declaration
-  | ELet Dec Exp
+  | ELet [Dec] Exp
   -- | paren enclosing
   | EParen Exp
   -- Deriving forms
@@ -36,12 +37,9 @@ data ExpRow
 data Exp
   -- | atomic
   = EAtExp AtExp
-  -- | flatten application (intermediate structure)
-  | EFlatApp [AtExp]
   -- | application (L)
-  | EApp Exp AtExp
+  | EApp AtExp AtExp
   -- | infixed application
-  -- | EInfixApp Exp I.VId Exp
   | EInfixApp AtExp I.VId AtExp
   -- | typed (L)
   | ETyped Exp T.Ty
@@ -148,6 +146,6 @@ data FClause
 
 -- | Derive case-of to anonymous function application
 caseOf :: Exp -> Exp
-caseOf (ECaseOf e m) = EApp (EFn m) (EParen e)
+caseOf (ECaseOf e m) = EApp (EParen (EFn m)) (EParen e)
 -- fallback to no derivation
 caseOf exp           = exp

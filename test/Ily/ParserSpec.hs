@@ -183,218 +183,229 @@ spec = do
           (S.TRec
             [S.TyRow (S.Lab "l") (S.TTyCon [] (S.TyCon [] "t"))]))
 
---  -- Expression
---  describe "exp" $ do
---
---    it "exp scons" $ 
---      shouldParse P.parseExp "1"
---        (S.EAtExp (S.ESCon (S.SInt 1)))
---
---    it "exp vid" $ 
---      shouldParse P.parseExp "x"
---        (S.EAtExp (S.EVId S.Nop (S.VId "x")))
---
---    it "exp record" $ 
---      shouldParse P.parseExp "{ x = 1, y = \"two\" }"
---        (S.EAtExp
---          (S.ERec
---            [ S.ERow
---                 (S.Lab "x")
---                 (S.EAtExp (S.ESCon (S.SInt 1)))
---            , S.ERow
---                 (S.Lab "y")
---                 (S.EAtExp (S.ESCon (S.SStr "two")))
---            ]
---          )
---        )
---
---
---    it "exp 2 columns tuple" $ 
---      shouldParse P.parseExp "(1, \"two\")"
---        (S.EAtExp $ S.ETuple
---          [ S.EAtExp $ S.ESCon (S.SInt 1)
---          , S.EAtExp $ S.ESCon (S.SStr "two")
---          ])
---
---    it "exp zero element list" $
---      shouldParse P.parseExp "[]"
---        (S.EAtExp $ S.EList [])
---
---    it "exp 1 element list" $
---      shouldParse P.parseExp "[ 1 ]"
---        (S.EAtExp $ S.EList
---          [ S.EAtExp $ S.ESCon (S.SInt 1)
---          ])
---
---    it "exp 2 elements list" $
---      shouldParse P.parseExp "[ 1, 2 ]"
---        (S.EAtExp $ S.EList
---          [ S.EAtExp $ S.ESCon (S.SInt 1)
---          , S.EAtExp $ S.ESCon (S.SInt 2)
---          ])
---
---    it "exp application" $ 
---      shouldParse P.parseExp "inc 1"
---        (S.EApp
---          (S.EAtExp (S.EVId S.Nop (S.VId "inc")))
---          (S.ESCon (S.SInt 1))
---        )
---
---    it "exp let val in vid" $ 
---      shouldParse P.parseExp "let val x = 1 in x end"
---        (S.EAtExp
---          (S.ELet
---            (S.DVal []
---              [S.VBind
---                 (S.PAtPat (S.PVId S.Nop (S.VId "x")))
---                 (S.EAtExp (S.ESCon (S.SInt 1)))])
---            (S.EAtExp
---              (S.EVId S.Nop (S.VId "x")))))
---
---    it "exp let val in fun app" $ 
---      shouldParse P.parseExp "let val x = 1 in f x end"
---        (S.EAtExp
---          (S.ELet
---            (S.DVal []
---              [S.VBind
---                 (S.PAtPat (S.PVId S.Nop (S.VId "x")))
---                 (S.EAtExp (S.ESCon (S.SInt 1)))])
---            (S.EApp
---              (S.EAtExp (S.EVId S.Nop (S.VId "f")))
---              (S.EVId S.Nop (S.VId "x"))
---            )
---          )
---        )
---
---    it "exp let val in infix app" $ 
---      shouldParse P.parseExp "let val x = 1 and y = 2 in x + y end"
---        (S.EAtExp
---          (S.ELet
---            (S.DVal []
---              [ S.VBind
---                  (S.PAtPat (S.PVId S.Nop (S.VId "x")))
---                  (S.EAtExp (S.ESCon (S.SInt 1)))
---              , S.VBind
---                  (S.PAtPat (S.PVId S.Nop (S.VId "y")))
---                  (S.EAtExp (S.ESCon (S.SInt 2)))
---                 ])
---            (S.EInfixApp
---              (S.EVId S.Nop (S.VId "x"))
---              (S.VId "+")
---              (S.EVId S.Nop (S.VId "y"))
---            )
---          )
---        )
---
---    it "exp infix app" $ 
---      shouldParse P.parseExp "1 + 2"
---        (S.EInfixApp
---          (S.ESCon (S.SInt 1))
---          (S.VId "+")
---          (S.ESCon (S.SInt 2))
---        )
---
---    it "exp infix app with symbol" $ 
---      shouldParse P.parseExp "x + y"
---        (S.EInfixApp
---          (S.EVId S.Nop (S.VId "x"))
---          (S.VId "+")
---          (S.EVId S.Nop (S.VId "y"))
---        )
---
---    it "exp typed" $ 
---      shouldParse P.parseExp "1: int"
---        (S.ETyped
---          (S.EAtExp (S.ESCon (S.SInt 1)))
---          (S.TyTyCon [] (S.TyCon "int")))
---
---    -- TODO: handle
---    -- TODO: raise
---    
---    it "exp fn" $ 
---      shouldParse P.parseExp "fn x => x + 1"
---        (S.EFn
---          (S.MMRule
---            [S.MRule
---               (S.PAtPat (S.PVId S.Nop (S.VId "x")))
---               (S.EInfixApp
---                 (S.EVId S.Nop (S.VId "x"))
---                 (S.VId "+")
---                 (S.ESCon (S.SInt 1))
---               )
---            ]))
---
---  -- Declaration
---  describe "dec" $ do
---
---    it "dec int value" $ 
---      shouldParse P.parseDec "val i = 1"
---        (S.DVal []
---          [S.VBind
---             (S.PAtPat (S.PVId S.Nop (S.VId "i")))
---             (S.EAtExp (S.ESCon (S.SInt 1)))])
---
---    it "dec type alias" $ 
---      shouldParse P.parseDec "type i = int"
---        (S.DType
---          [ S.TBind []
---              (S.TyCon "i") 
---              (S.TyTyCon [] (S.TyCon "int"))])
---
---    it "dec type alias with tyvar" $ 
---      shouldParse P.parseDec "type 'a opt = 'a option"
---        (S.DType
---          [ S.TBind
---              [S.TyVar "'a"]
---              (S.TyCon "opt") 
---              (S.TyTyCon
---                [S.TyTyVar (S.TyVar "'a")]
---                (S.TyCon "option"))])
---
---    it "dec datatype" $ 
---      shouldParse P.parseDec "datatype bool = true | false"
---        (S.DDataType
---          [ S.DBind
---              []
---              (S.TyCon "bool") 
---              [ S.CBind
---                  S.Nop
---                  (S.VId "true")
---                  Nothing
---              , S.CBind
---                  S.Nop
---                  (S.VId "false")
---                  Nothing
---              ]])
---
---    it "dec open one modules" $ 
---      shouldParse P.parseDec "open 日本語"
---        (S.DOpen
---          [ S.StrId "日本語"
---          ])
---
---    it "dec open two modules" $ 
---      shouldParse P.parseDec "open List 日本語.モジュール"
---        (S.DOpen
---          [ S.StrId "List"
---          , S.QStrId ["日本語"] "モジュール"
---          ])
---
---    -- TODO
+  -- Expression
+  describe "exp" $ do
+
+    it "exp scons" $ 
+      shouldParse P.exp "1"
+        (S.EAtExp (S.ESCon (S.SInt 1)))
+
+    it "exp vid" $ 
+      shouldParse P.exp "x"
+        (S.EAtExp (S.EVId S.Nop (S.VId [] "x")))
+
+    it "exp record" $ 
+      shouldParse P.exp "{ x = 1, y = \"two\" }"
+        (S.EAtExp
+          (S.ERec
+            [ S.ERow
+                 (S.Lab "x")
+                 (S.EAtExp (S.ESCon (S.SInt 1)))
+            , S.ERow
+                 (S.Lab "y")
+                 (S.EAtExp (S.ESCon (S.SStr "two")))
+            ]
+          )
+        )
+
+
+    it "exp 2 columns tuple" $ 
+      shouldParse P.exp "(1, \"two\")"
+        (S.EAtExp $ S.ETuple
+          [ S.EAtExp $ S.ESCon (S.SInt 1)
+          , S.EAtExp $ S.ESCon (S.SStr "two")
+          ])
+
+    it "exp zero element list" $
+      shouldParse P.exp "[]"
+        (S.EAtExp $ S.EList [])
+
+    it "exp 1 element list" $
+      shouldParse P.exp "[ 1 ]"
+        (S.EAtExp $ S.EList
+          [ S.EAtExp $ S.ESCon (S.SInt 1)
+          ])
+
+    it "exp 2 elements list" $
+      shouldParse P.exp "[ 1, 2 ]"
+        (S.EAtExp $ S.EList
+          [ S.EAtExp $ S.ESCon (S.SInt 1)
+          , S.EAtExp $ S.ESCon (S.SInt 2)
+          ])
+
+    it "exp application" $ 
+      shouldParse P.exp "inc 1"
+        (S.EApp
+          (S.EVId S.Nop (S.VId [] "inc"))
+          (S.ESCon (S.SInt 1))
+        )
+
+    it "exp application two arguments" $ 
+      shouldParse P.exp "add 1 2"
+        (S.EApp
+          (S.EParen
+            (S.EApp
+              (S.EVId S.Nop (S.VId [] "add"))
+              (S.ESCon (S.SInt 1))))
+          (S.ESCon (S.SInt 2)))
+
+    it "exp let val in vid" $ 
+      shouldParse P.exp "let val x = 1 in x end"
+        (S.EAtExp
+          (S.ELet
+            [S.DVal []
+               [S.VBind
+                  (S.PAtPat (S.PVId S.Nop (S.VId [] "x")))
+                  (S.EAtExp (S.ESCon (S.SInt 1)))]
+            ]
+            (S.EAtExp
+              (S.EVId S.Nop (S.VId [] "x")))))
+
+    it "exp let val in fun app" $ 
+      shouldParse P.exp "let val x = 1 in f x end"
+        (S.EAtExp
+          (S.ELet
+            [S.DVal []
+               [S.VBind
+                  (S.PAtPat (S.PVId S.Nop (S.VId [] "x")))
+                  (S.EAtExp (S.ESCon (S.SInt 1)))]
+            ]
+            (S.EApp
+              (S.EVId S.Nop (S.VId [] "f"))
+              (S.EVId S.Nop (S.VId [] "x"))
+            )
+          )
+        )
+
+    it "exp let val in infix app" $ 
+      shouldParse P.exp "let val x = 1 and y = 2 in x + y end"
+        (S.EAtExp
+          (S.ELet
+            [S.DVal []
+              [ S.VBind
+                  (S.PAtPat (S.PVId S.Nop (S.VId [] "x")))
+                  (S.EAtExp (S.ESCon (S.SInt 1)))
+              , S.VBind
+                  (S.PAtPat (S.PVId S.Nop (S.VId [] "y")))
+                  (S.EAtExp (S.ESCon (S.SInt 2)))
+                 ]
+            ]
+            (S.EInfixApp
+              (S.EVId S.Nop (S.VId [] "x"))
+              (S.VId [] "+")
+              (S.EVId S.Nop (S.VId [] "y"))
+            )
+          )
+        )
+
+    it "exp infix app" $ 
+      shouldParse P.exp "1 + 2"
+        (S.EInfixApp
+          (S.ESCon (S.SInt 1))
+          (S.VId [] "+")
+          (S.ESCon (S.SInt 2))
+        )
+
+    it "exp infix app with symbol" $ 
+      shouldParse P.exp "x + y"
+        (S.EInfixApp
+          (S.EVId S.Nop (S.VId [] "x"))
+          (S.VId [] "+")
+          (S.EVId S.Nop (S.VId [] "y"))
+        )
+
+    it "exp typed" $ 
+      shouldParse P.exp "1: int"
+        (S.ETyped
+          (S.EAtExp (S.ESCon (S.SInt 1)))
+          (S.TTyCon [] (S.TyCon [] "int")))
+
+    -- TODO: handle
+    -- TODO: raise
+    
+    it "exp fn" $ 
+      shouldParse P.exp "fn x => inc x"
+        (S.EFn
+          (S.MMRule
+            [S.MRule
+               (S.PAtPat (S.PVId S.Nop (S.VId [] "x")))
+               (S.EApp
+                 (S.EVId S.Nop (S.VId [] "inc"))
+                 (S.EVId S.Nop (S.VId [] "x"))
+               )
+            ]))
+
+  -- Declaration
+  describe "dec" $ do
+
+    it "dec int value" $ 
+      shouldParse P.dec "val i = 1"
+        (S.DVal []
+          [S.VBind
+             (S.PAtPat (S.PVId S.Nop (S.VId [] "i")))
+             (S.EAtExp (S.ESCon (S.SInt 1)))])
+
+    it "dec type alias" $ 
+      shouldParse P.dec "type i = int"
+        (S.DType
+          [ S.TBind []
+              (S.TyCon [] "i") 
+              (S.TTyCon [] (S.TyCon [] "int"))])
+
+    it "dec type alias with tyvar" $ 
+      shouldParse P.dec "type 'a opt = 'a option"
+        (S.DType
+          [ S.TBind
+              [S.TyVar "'a"]
+              (S.TyCon [] "opt") 
+              (S.TTyCon
+                [S.TTyVar (S.TyVar "'a")]
+                (S.TyCon [] "option"))])
+
+    it "dec datatype" $ 
+      shouldParse P.dec "datatype bool = true | false"
+        (S.DDataType
+          [ S.DBind
+              []
+              (S.TyCon [] "bool") 
+              [ S.CBind
+                  S.Nop
+                  (S.VId [] "true")
+                  Nothing
+              , S.CBind
+                  S.Nop
+                  (S.VId [] "false")
+                  Nothing
+              ]])
+
+    it "dec open one modules" $ 
+      shouldParse P.dec "open 日本語"
+        (S.DOpen
+          [ S.StrId [] "日本語"
+          ])
+
+    it "dec open two modules" $ 
+      shouldParse P.dec "open List 日本語.モジュール"
+        (S.DOpen
+          [ S.StrId [] "List"
+          , S.StrId ["日本語"] "モジュール"
+          ])
+
+    -- TODO
 --    it "dec function" $ 
---      shouldParse P.parseDec
+--      shouldParse P.dec
 --        (unlines [ "fun not true  = false"
 --                 , "  | not false = true"
 --                 ])
 --        (S.DVal
 --          []
 --          [ S.VBind
---              (S.PAtPat (S.PVId S.Nop (S.VId "not")))
+--              (S.PAtPat (S.PVId S.Nop (S.VId [] "not")))
 --              (S.EFn
 --                (S.MMRule
 --                  [S.MRule
---                     (S.PFlatApp [S.PVId S.Nop (S.VId "true")])
---                     (S.EFlatApp
+--                     (S.PFlatApp [S.PVId S.Nop (S.VId [] "true")])
+--                     (S.EAtExp
 --                       [ S.EVId S.Nop (S.VId "false")
 --                       ])
 --                  ,S.MRule
@@ -404,8 +415,8 @@ spec = do
 --                       ])
 --                  ]))
 --          ])
---
---  -- Module
+
+  -- Module
 --  describe "strdec" $ do
 --
 --    it "strdec" $ 
