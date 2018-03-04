@@ -110,10 +110,10 @@ dec = choice [ dval
     dfun = DFun <$> (L.fun *> tyvarseq) <*> fvalbinds
 
 tyvarseq :: Parser [TyVar]
-tyvarseq = choice [ single, seq, none ]
+tyvarseq = choice [ tvarsingle, tvarseq, none ]
   where
-    single = fmap (:[]) I.tyvar
-    seq = seqOf I.tyvar
+    tvarsingle = fmap (:[]) I.tyvar
+    tvarseq = seqOf I.tyvar
     none = return []
 
 valbinds :: Parser [ValBind]
@@ -153,3 +153,4 @@ fclause = FClause
             <*> some P.atpat
             <*> optional (L.colon *> T.ty)
             <*> (L.eq *> exp)
+

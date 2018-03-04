@@ -24,7 +24,7 @@ data TyCon
   = TyCon [Id] Id
   deriving (Eq, Show)
 
--- | The class Lab is extended to include the numeric labels 1 2 3 ···,
+-- | The class Lab is extended to include the numeric labels 1 2 3 ,
 -- i.e. any numeral not starting with 0. 
 newtype Lab
   = Lab Id

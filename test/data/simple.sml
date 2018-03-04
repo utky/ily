@@ -5,8 +5,9 @@ val body = `
 の
 文章
 `
+
 val f = fn true => 1
-        |  false => 2
+ |  false => 2
 
 val i = 1
 
@@ -15,7 +16,7 @@ datatype bool = true | false
 datatype 'a option = some of 'a | none
 
 val value = fn (some x) => true
-            |  none   => false
+ |  none   => false
 
 fun not true  = false
   | not false = true

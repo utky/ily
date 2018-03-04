@@ -1,7 +1,6 @@
 module Ily.ParserSpec (spec) where
 
 import           Test.Hspec
-import           Test.QuickCheck
 --import qualified Ily.Lexer as L
 import qualified Ily.Parser as P
 import qualified Ily.Syntax as S
