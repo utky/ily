@@ -47,6 +47,9 @@ spec = do
     it "parse single tyvar tycon" $ 
       shouldParse P.ty "'a option"
         (S.TTyCon [S.TTyVar (S.TyVar "'a")] (S.TyCon [] "option"))
+    it "parse nested tyvar tycon" $ 
+      shouldParse P.ty "'a option list"
+        (S.TTyCon [(S.TTyCon [S.TTyVar (S.TyVar "'a")] (S.TyCon [] "option"))] (S.TyCon [] "list"))
     it "parse single type application tycon" $ 
       shouldParse P.ty "int option"
         (S.TTyCon [S.TTyCon [] (S.TyCon [] "int")] (S.TyCon [] "option"))
